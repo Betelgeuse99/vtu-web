@@ -1,35 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Wifi, Phone, Grid, User } from 'lucide-react';
+import { Home, Wallet, HelpCircle, User, MoreHorizontal } from 'lucide-react';
 
-export default function BottomNav() {
-  const navItems = [
-    { label: 'Home', path: '/', icon: Home },
-    { label: 'Data', path: '/data', icon: Wifi },
-    { label: 'Airtime', path: '/airtime', icon: Phone },
-    { label: 'Services', path: '/services', icon: Grid },
-    { label: 'Account', path: '/account', icon: User },
-  ];
+const NAV_ITEMS = [
+  { label: 'Home', path: '/dashboard', icon: Home },
+  { label: 'Wallet', path: '/fund-wallet', icon: Wallet },
+  { label: 'Support', path: '/support', icon: HelpCircle },
+  { label: 'Account', path: '/account', icon: User },
+];
 
+export default function BottomNav({ onMore }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0A192F]/95 backdrop-blur-md border-t border-slate-800 z-50">
-      <div className="flex justify-around items-center h-16 px-2">
-        {navItems.map(({ label, path, icon: Icon }) => (
+    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 z-50">
+      <div className="flex justify-around items-center h-16 px-1">
+        {NAV_ITEMS.map(({ label, path, icon: Icon }) => (
           <NavLink
             key={path}
             to={path}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center w-full py-1 text-xs font-medium transition-all ${
-                isActive
-                  ? 'text-[#D4AF37] scale-105'
-                  : 'text-slate-400 hover:text-slate-200'
+              `flex flex-col items-center justify-center flex-1 py-1 transition-all ${
+                isActive ? 'text-[#0A192F]' : 'text-gray-400'
               }`
             }
           >
             <Icon className="w-5 h-5 mb-1" />
-            <span>{label}</span>
+            <span className="text-[11px] font-medium">{label}</span>
           </NavLink>
         ))}
+        <button onClick={onMore} className="flex flex-col items-center justify-center flex-1 py-1 text-gray-400">
+          <MoreHorizontal className="w-5 h-5 mb-1" />
+          <span className="text-[11px] font-medium">More</span>
+        </button>
       </div>
     </nav>
   );

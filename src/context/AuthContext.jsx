@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import API from '../services/api';
 
 const AuthContext = createContext(null);
@@ -8,42 +8,53 @@ export const AuthProvider = ({ children }) => {
     const saved = localStorage.getItem('vtu_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [walletBalance, setWalletBalance] = useState(0);
+  const [wallet, setWallet] = useState({ balance: 0 });
   const [loading, setLoading] = useState(true);
 
-  const fetchBalance = async () => {
+  const fetchBalance = useCallback(async () => {
+    if (!user?.id) return;
     try {
-      const res = await API.get('/wallet/balance');
+      const session = JSON.parse(localStorage.getItem('vtu_session') || 'null');
+      if (!session?.access_token) return;
+      const res = await API.get('/api/v2/wallet/balance');
       if (res.data?.balance !== undefined) {
-        setWalletBalance(res.data.balance);
+        setWallet({ balance: res.data.balance });
       }
     } catch (err) {
-      console.error('Failed to fetch wallet balance', err);
+      console.error('Failed to fetch balance', err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user) {
       fetchBalance();
     }
     setLoading(false);
-  }, [user]);
+  }, [user, fetchBalance]);
 
-  const login = (userData, token) => {
-    localStorage.setItem('vtu_token', token);
+  const login = (userData, sessionData) => {
+    localStorage.setItem('vtu_session', JSON.stringify(sessionData));
+    localStorage.setItem('vtu_user', JSON.stringify(userData));
+    setUser(userData);
+    if (sessionData?.wallet) {
+      setWallet(sessionData.wallet);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('vtu_session');
+    localStorage.removeItem('vtu_user');
+    setUser(null);
+    setWallet({ balance: 0 });
+  };
+
+  const refreshUser = (userData) => {
     localStorage.setItem('vtu_user', JSON.stringify(userData));
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('vtu_token');
-    localStorage.removeItem('vtu_user');
-    setUser(null);
-    setWalletBalance(0);
-  };
-
   return (
-    <AuthContext.Provider value={{ user, walletBalance, fetchBalance, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, wallet, login, logout, loading, fetchBalance, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
