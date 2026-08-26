@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, Check } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import NetworkSelector from '../components/NetworkSelector';
@@ -17,6 +17,7 @@ export default function DataScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
+  const summaryRef = useRef(null);
 
   useEffect(() => {
     if (network) {
@@ -28,6 +29,15 @@ export default function DataScreen() {
         .finally(() => setLoadingPlans(false));
     }
   }, [network]);
+
+  const handleSelectPlan = (plan) => {
+    setSelectedPlan(plan);
+    setExpanded(false);
+    // Scroll straight to the phone number input section
+    setTimeout(() => {
+      summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   const canBuy = network && selectedPlan && phone.length === 11;
 
@@ -102,7 +112,7 @@ export default function DataScreen() {
                     {plans.map((plan) => (
                       <button
                         key={plan.id || plan.plan_id}
-                        onClick={() => setSelectedPlan(plan)}
+                        onClick={() => handleSelectPlan(plan)}
                         className={`rounded-xl p-3 text-left border-2 transition-all ${selectedPlan?.id === plan.id ? 'border-[#D4AF37]' : 'border-gray-200'}`}
                       >
                         <p className="text-[18px] font-bold text-[#0A192F]">{plan.size || plan.volume}</p>
@@ -121,7 +131,7 @@ export default function DataScreen() {
         {/* Summary & Purchase */}
         {selectedPlan && (
           <>
-            <div className="bg-white rounded-xl p-4 border border-gray-100">
+            <div ref={summaryRef} className="bg-white rounded-xl p-4 border border-gray-100 scroll-mt-16">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-[#FEF3C7] flex items-center justify-center font-bold text-xs" style={{ backgroundColor: network.color, color: network.textColor }}>{network.name}</div>
                 <div className="flex-1">

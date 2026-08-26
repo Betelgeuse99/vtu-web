@@ -1,29 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import API from '../services/api';
+import { fetchWalletBalance } from '../services/supabase';
 
 const AuthContext = createContext(null);
-
-const SUPABASE_URL = 'https://lraryzkamshicildghdv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxyYXJ5emthbXNoa2lsZGdoZHZIiJ9-placeholder';
-
-async function fetchBalanceFromSupabase(userId, accessToken) {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/wallets?user_id=eq.${userId}&select=balance`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'apikey': SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = await res.json();
-    if (data && data[0]?.balance !== undefined) {
-      return data[0].balance;
-    }
-  } catch (err) {
-    console.error('Supabase wallet fetch failed', err);
-  }
-  return null;
-}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -40,24 +19,15 @@ export const AuthProvider = ({ children }) => {
 
   const fetchBalance = useCallback(async (silent = false) => {
     if (!user?.id) return;
-    const session = JSON.parse(localStorage.getItem('vtu_session') || 'null');
-    const token = session?.access_token;
-    if (!token) return;
-
-    // Try Supabase first (real-time wallet), then backend
-    let balance = await fetchBalanceFromSupabase(user.id, token);
-    if (balance === null) {
-      try {
-        const res = await API.get('/wallet/balance');
-        if (res.data?.balance !== undefined) balance = res.data.balance;
-      } catch {
-        if (!silent) console.error('Backend wallet fetch failed');
+    try {
+      const balance = await fetchWalletBalance(user.id);
+      if (balance !== null) {
+        const wb = { balance };
+        setWallet(wb);
+        localStorage.setItem('vtu_wallet', JSON.stringify(wb));
       }
-    }
-    if (balance !== null) {
-      const wb = { balance };
-      setWallet(wb);
-      localStorage.setItem('vtu_wallet', JSON.stringify(wb));
+    } catch (err) {
+      if (!silent) console.error('Failed to fetch balance', err);
     }
   }, [user]);
 
@@ -65,7 +35,7 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       fetchBalance(false);
       if (pollRef.current) clearInterval(pollRef.current);
-      pollRef.current = setInterval(() => fetchBalance(true), 12000);
+      pollRef.current = setInterval(() => fetchBalance(true), 10000);
     } else {
       if (pollRef.current) clearInterval(pollRef.current);
     }
@@ -82,19 +52,18 @@ export const AuthProvider = ({ children }) => {
       setWallet(wb);
       localStorage.setItem('vtu_wallet', JSON.stringify(wb));
     }
-    // Fetch live balance from Supabase immediately after login
-    setTimeout(() => {
-      const sess = JSON.parse(localStorage.getItem('vtu_session') || 'null');
-      if (sess?.access_token && userData?.id) {
-        fetchBalanceFromSupabase(userData.id, sess.access_token).then((b) => {
-          if (b !== null) {
-            const wb = { balance: b };
+    if (userData?.id && sessionData?.access_token) {
+      setTimeout(async () => {
+        try {
+          const balance = await fetchWalletBalance(userData.id);
+          if (balance !== null) {
+            const wb = { balance };
             setWallet(wb);
             localStorage.setItem('vtu_wallet', JSON.stringify(wb));
           }
-        });
-      }
-    }, 500);
+        } catch {}
+      }, 500);
+    }
   };
 
   const logout = () => {

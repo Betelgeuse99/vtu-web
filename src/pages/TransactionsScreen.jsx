@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TopBar from '../components/TopBar';
 import StatusBadge from '../components/StatusBadge';
-import API from '../services/api';
+import { fetchTransactions, fetchSuccessfulPayments, reconcileFunding } from '../services/supabase';
+import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/helpers';
 import { Phone, Globe, Zap, Tv, Receipt, RefreshCw } from 'lucide-react';
 
@@ -16,33 +17,65 @@ const ICON_MAP = {
 };
 
 export default function TransactionsScreen() {
+  const { user } = useAuth();
   const [txns, setTxns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [message, setMessage] = useState('');
 
   const fetchTxns = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
     try {
-      const res = await API.get('/transactions');
-      setTxns(res.data.data || res.data.transactions || []);
-    } catch {
-      try {
-        const res2 = await API.get('/api/v2/transactions');
-        setTxns(res2.data.data || res2.data.transactions || []);
-      } catch {
-        setTxns([]);
-      }
+      // Self-heal missing funding rows first (same as the app)
+      await reconcileFunding(user.id);
+      const [remote, payments] = await Promise.all([
+        fetchTransactions(user.id),
+        fetchSuccessfulPayments(user.id),
+      ]);
+
+      // Self-heal: build funding rows from successful payments not in history
+      const remoteRefs = new Set(remote.map(t => t.reference).filter(Boolean));
+      const healed = payments
+        .filter(p => !remoteRefs.has(p.reference))
+        .map(p => ({
+          id: p.reference,
+          user_id: user.id,
+          title: 'Wallet Funding',
+          service_type: 'funding',
+          amount: Number(p.amount),
+          recipient: 'Squad',
+          status: 'successful',
+          reference: p.reference,
+          provider: null,
+          created_at: p.created_at,
+        }));
+
+      const merged = [...remote, ...healed].sort((a, b) => {
+        const t1 = new Date(a.created_at || 0).getTime();
+        const t2 = new Date(b.created_at || 0).getTime();
+        return t2 - t1;
+      });
+      setTxns(merged);
+      setMessage(merged.length > 0 ? `Fetched ${merged.length} transactions` : '');
+    } catch (err) {
+      setMessage(`Fetch failed: ${err.message}`);
     }
     setLoading(false);
-  }, []);
+  }, [user]);
 
-  useEffect(() => { fetchTxns(); }, [fetchTxns]);
+  useEffect(() => {
+    fetchTxns();
+    const iv = setInterval(fetchTxns, 15000);
+    return () => clearInterval(iv);
+  }, [fetchTxns]);
 
   return (
     <div className="min-h-screen bg-[#F4F6F9]">
       <TopBar title="Transaction History" onBack />
       <div className="px-4 pt-2">
-        <div className="flex justify-end mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[11px] text-gray-400">{message}</span>
           <button onClick={fetchTxns} className="p-2 text-gray-400"><RefreshCw className="w-4 h-4" /></button>
         </div>
         {loading ? (
@@ -58,18 +91,19 @@ export default function TransactionsScreen() {
             {txns.map((tx) => {
               const iconInfo = ICON_MAP[tx.service_type] || ICON_MAP.funding;
               const Icon = iconInfo.icon;
+              const status = typeof tx.status === 'string' ? tx.status.toLowerCase() : 'pending';
               return (
                 <button key={tx.id} onClick={() => setSelected(tx)} className="w-full flex items-center gap-3 bg-white rounded-xl p-3 border border-gray-100 active:bg-gray-50">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: tx.status === 'successful' ? '#DCFCE7' : tx.status === 'failed' ? '#FEE2E2' : '#FEF3C7' }}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: status === 'successful' ? '#DCFCE7' : status === 'failed' ? '#FEE2E2' : '#FEF3C7' }}>
                     <Icon className="w-5 h-5 text-[#0A192F]" />
                   </div>
                   <div className="flex-1 text-left min-w-0">
                     <p className="text-[15px] font-bold text-[#0A192F] truncate">{tx.title || tx.service_type}</p>
-                    <p className="text-xs text-gray-400">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : ''}</p>
+                    <p className="text-xs text-gray-400">{tx.created_at ? new Date(tx.created_at).toLocaleString() : ''}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[15px] font-bold text-[#0A192F]">-{formatCurrency(tx.amount)}</p>
-                    <StatusBadge status={tx.status} />
+                    <StatusBadge status={status} />
                   </div>
                 </button>
               );
