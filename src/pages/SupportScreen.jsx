@@ -3,7 +3,7 @@ import TopBar from '../components/TopBar';
 import { Globe, MessageCircle, Rocket, Phone, ChevronRight } from 'lucide-react';
 
 const ITEMS = [
-  { title: 'Visit Our Website', subtitle: 'Read our blog and updates', icon: Globe, action: () => window.open('https://dreamhatcher.blogspot.com', '_blank') },
+  { title: 'Visit Our Website', subtitle: 'Read our blog and updates', icon: Globe, action: () => window.open('https://dreamhatchertech.blogspot.com', '_blank') },
   { title: 'Chat on WhatsApp', subtitle: 'Quick support via WhatsApp', icon: MessageCircle, action: () => window.open('https://wa.me/2347037412314', '_blank') },
   { title: 'Live Chat Support', subtitle: 'Chat with our support team', icon: Rocket, soon: true },
   { title: 'Phone Support', subtitle: 'Call us for assistance', icon: Phone, action: () => window.open('tel:+2347037412314') },

@@ -21,7 +21,7 @@ export default function LoginScreen() {
     try {
       const res = await API.post('/auth/login', { email: email.trim().toLowerCase(), password });
       if (res.data.success) {
-        login(res.data.user, { ...res.data.session, wallet: res.data.wallet });
+        login(res.data.user, { ...res.data.session, wallet: res.data.wallet }, remember);
         navigate('/dashboard');
       } else {
         setError(res.data.message || 'Login failed');

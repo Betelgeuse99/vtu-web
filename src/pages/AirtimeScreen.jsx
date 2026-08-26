@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import NetworkSelector from '../components/NetworkSelector';
@@ -15,6 +16,7 @@ const PHONE_PREFIXES = {
 
 export default function AirtimeScreen() {
   const { wallet, fetchBalance } = useAuth();
+  const navigate = useNavigate();
   const [network, setNetwork] = useState(null);
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
@@ -23,7 +25,9 @@ export default function AirtimeScreen() {
   const [success, setSuccess] = useState(null);
 
   const isMismatch = network && phone.length >= 4 && !PHONE_PREFIXES[network.slug]?.includes(phone.slice(0, 4));
-  const canBuy = network && phone.length === 11 && Number(amount) >= (network.slug === 'mtn' ? 25 : 50);
+  const minAmt = network?.slug === 'mtn' ? 25 : 50;
+  const insufficient = wallet.balance < Number(amount);
+  const canBuy = network && phone.length === 11 && Number(amount) >= minAmt && !insufficient && !loading;
 
   const handleBuy = async () => {
     setLoading(true);
@@ -50,6 +54,8 @@ export default function AirtimeScreen() {
   };
 
   if (success) {
+    // Auto-return to dashboard after a successful purchase
+    setTimeout(() => navigate('/dashboard'), 2500);
     return (
       <div className="min-h-screen bg-[#F4F6F9]">
         <TopBar title="Airtime Top-up" onBack={() => setSuccess(null)} />
@@ -60,7 +66,8 @@ export default function AirtimeScreen() {
           <h2 className="text-xl font-bold text-[#0A192F] mb-1">Airtime Purchase Successful!</h2>
           <p className="text-gray-500 text-sm mb-2">{formatCurrency(success.amount)} airtime sent to {phone}</p>
           <p className="text-gray-400 text-xs">Ref: {success.reference}</p>
-          <button onClick={() => { setSuccess(null); setPhone(''); setAmount(''); }} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+          <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Go to Dashboard</button>
         </div>
       </div>
     );
@@ -91,9 +98,12 @@ export default function AirtimeScreen() {
           <label className="text-xs font-medium text-gray-600 mb-1 block">Amount (₦)</label>
           <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`Min ${network?.slug === 'mtn' ? '₦25' : '₦50'}`} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+          {amount && insufficient && (
+            <p className="text-red-500 text-xs mt-1">Insufficient wallet balance. Available: {formatCurrency(wallet.balance)}</p>
+          )}
         </div>
 
-        <button onClick={handleBuy} disabled={!canBuy || loading} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+        <button onClick={handleBuy} disabled={!canBuy} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
           {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'Buy Airtime'}
         </button>
       </div>

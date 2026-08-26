@@ -1,19 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import API from '../services/api';
 import { fetchWalletBalance } from '../services/supabase';
+import { getSession, setSession, getUser, setUser, getWallet, setWallet, clearAuth } from '../utils/storage';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('vtu_user')) || null; } catch { return null; }
-  });
-  const [wallet, setWallet] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('vtu_wallet'));
-      return saved || { balance: 0 };
-    } catch { return { balance: 0 }; }
-  });
+  const [user, setUserState] = useState(() => getUser());
+  const [wallet, setWalletState] = useState(() => getWallet() || { balance: 0 });
   const [loading, setLoading] = useState(true);
   const pollRef = useRef(null);
 
@@ -23,8 +17,8 @@ export const AuthProvider = ({ children }) => {
       const balance = await fetchWalletBalance(user.id);
       if (balance !== null) {
         const wb = { balance };
-        setWallet(wb);
-        localStorage.setItem('vtu_wallet', JSON.stringify(wb));
+        setWalletState(wb);
+        setWallet(wb, true);
       }
     } catch (err) {
       if (!silent) console.error('Failed to fetch balance', err);
@@ -43,14 +37,14 @@ export const AuthProvider = ({ children }) => {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [user, fetchBalance]);
 
-  const login = (userData, sessionData) => {
-    localStorage.setItem('vtu_session', JSON.stringify(sessionData));
-    localStorage.setItem('vtu_user', JSON.stringify(userData));
-    setUser(userData);
+  const login = (userData, sessionData, remember = true) => {
+    setSession(sessionData, remember);
+    setUser(userData, remember);
+    setUserState(userData);
     if (sessionData?.wallet?.balance !== undefined) {
       const wb = { balance: sessionData.wallet.balance };
-      setWallet(wb);
-      localStorage.setItem('vtu_wallet', JSON.stringify(wb));
+      setWalletState(wb);
+      setWallet(wb, remember);
     }
     if (userData?.id && sessionData?.access_token) {
       setTimeout(async () => {
@@ -58,8 +52,8 @@ export const AuthProvider = ({ children }) => {
           const balance = await fetchWalletBalance(userData.id);
           if (balance !== null) {
             const wb = { balance };
-            setWallet(wb);
-            localStorage.setItem('vtu_wallet', JSON.stringify(wb));
+            setWalletState(wb);
+            setWallet(wb, remember);
           }
         } catch {}
       }, 500);
@@ -67,17 +61,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('vtu_session');
-    localStorage.removeItem('vtu_user');
-    localStorage.removeItem('vtu_wallet');
+    clearAuth();
     if (pollRef.current) clearInterval(pollRef.current);
-    setUser(null);
-    setWallet({ balance: 0 });
+    setUserState(null);
+    setWalletState({ balance: 0 });
   };
 
   const refreshUser = (userData) => {
-    localStorage.setItem('vtu_user', JSON.stringify(userData));
-    setUser(userData);
+    const remember = Boolean(getSession());
+    setUser(userData, remember);
+    setUserState(userData);
   };
 
   return (

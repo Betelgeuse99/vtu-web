@@ -1,15 +1,13 @@
 // Supabase PostgREST helpers — mirrors how the Android app reads/writes
 // wallets, transactions, and payments directly against Supabase.
 
+import { getSession } from '../utils/storage';
+
 const SUPABASE_URL = 'https://lraryzkamshicildghdv.supabase.co';
 export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxyYXJ5emthbXNoaWNpbGRnaGR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MjQ4NDgsImV4cCI6MjEwMTEwMDg0OH0.243GADB6pgndKWrmWOco2AOK7vjzR7VAMdLu57QXkeQ';
 
 export const SQUAD_PUBLIC_KEY = 'pk_1762a528f4a1405270b3c052d081015253e9023a';
 export const SQUAD_SCRIPT_URL = 'https://checkout.squadco.com/widget/squad.min.js';
-
-function getSession() {
-  try { return JSON.parse(localStorage.getItem('vtu_session') || 'null'); } catch { return null; }
-}
 
 function authHeaders() {
   const session = getSession();

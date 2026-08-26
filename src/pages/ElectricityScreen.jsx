@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import API from '../services/api';
@@ -7,6 +8,7 @@ import { formatCurrency } from '../utils/helpers';
 
 export default function ElectricityScreen() {
   const { wallet, fetchBalance } = useAuth();
+  const navigate = useNavigate();
   const [discos, setDiscos] = useState([]);
   const [selectedDisco, setSelectedDisco] = useState(null);
   const [showDiscoList, setShowDiscoList] = useState(false);
@@ -59,6 +61,8 @@ export default function ElectricityScreen() {
   };
 
   if (token) {
+    // Auto-return to dashboard after the token is displayed (give time to copy it).
+    setTimeout(() => navigate('/dashboard'), 10000);
     return (
       <div className="min-h-screen bg-[#F4F6F9]">
         <TopBar title="Electricity Bill" onBack={() => setToken(null)} />
@@ -68,7 +72,8 @@ export default function ElectricityScreen() {
             <p className="text-sm text-gray-600 mb-2">Your Electricity Token</p>
             <p className="text-[22px] font-extrabold text-[#0A192F] tracking-[2px]">{token}</p>
           </div>
-          <button onClick={() => { setToken(null); setSuccess(false); setMeterNo(''); setAmount(''); setVerifyData(null); }} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+          <p className="text-[11px] text-emerald-600 mb-3 font-medium">Returning to dashboard...</p>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
         </div>
       </div>
     );
@@ -136,7 +141,10 @@ export default function ElectricityScreen() {
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
             </div>
             {error && <p className="text-red-500 text-xs">{error}</p>}
-            <button onClick={handlePay} disabled={loading || !amount || !phone || Number(amount) < 500} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+            {amount && Number(amount) >= 500 && wallet.balance < Number(amount) && (
+              <p className="text-red-500 text-[11px]">Insufficient balance — please fund your wallet first.</p>
+            )}
+            <button onClick={handlePay} disabled={loading || !amount || !phone || Number(amount) < 500 || wallet.balance < Number(amount)} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
               {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'PAY ELECTRICITY BILL'}
             </button>
           </>

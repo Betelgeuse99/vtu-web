@@ -1,38 +1,45 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CreditCard, HelpCircle, X } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/helpers';
+import { getSession } from '../utils/storage';
 import { insertPendingPayment, checkPaymentStatus, SQUAD_PUBLIC_KEY, SQUAD_SCRIPT_URL } from '../services/supabase';
 
 const MIN_FUNDING_AMOUNT = 100;
 
 export default function FundWalletScreen() {
   const { user, fetchBalance } = useAuth();
+  const navigate = useNavigate();
   const [amount, setAmount] = useState('');
   const [savingPayment, setSavingPayment] = useState(false);
   const [phase, setPhase] = useState('form'); // form | checkout | verifying | confirmed | unconfirmed
   const [reference, setReference] = useState('');
   const checkoutAmountRef = useRef(0);
+  // Synchronous guard against double-clicks / duplicate submissions.
+  const proceedGuardRef = useRef(false);
+  const refCounterRef = useRef(0);
 
   const email = user?.email || '';
 
-  const hasSession = () => {
-    try {
-      const s = JSON.parse(localStorage.getItem('vtu_session') || 'null');
-      return Boolean(s?.access_token);
-    } catch { return false; }
+  const hasSession = () => Boolean(getSession()?.access_token);
+
+  const generateReference = () => {
+    // Counter + timestamp + random => collision-proof across rapid clicks.
+    refCounterRef.current += 1;
+    const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+    return `VTU-${Date.now()}-${refCounterRef.current}-${rand}`;
   };
 
-  const generateReference = () => `VTU-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
   const handleProceed = async () => {
-    if (savingPayment) return;
+    if (savingPayment || proceedGuardRef.current) return;
     const amt = Number(amount);
     if (isNaN(amt) || amt < MIN_FUNDING_AMOUNT) return;
     if (!user?.id || !email) return;
     if (!hasSession()) { alert('Please log in to make a payment.'); return; }
 
+    proceedGuardRef.current = true;
     const ref = generateReference();
     checkoutAmountRef.current = amt;
     setReference(ref);
@@ -44,8 +51,10 @@ export default function FundWalletScreen() {
     } catch (err) {
       console.error('Payment save failed', err);
       alert('Could not start payment. Please try again.');
+    } finally {
+      setSavingPayment(false);
+      proceedGuardRef.current = false;
     }
-    setSavingPayment(false);
   };
 
   const handlePaymentSubmitted = () => {
@@ -125,8 +134,13 @@ export default function FundWalletScreen() {
           reference={reference}
           onConfirmed={() => {
             fetchBalance(true);
+            // Auto-return to dashboard once funding is confirmed.
+            setTimeout(() => navigate('/dashboard'), 2000);
           }}
-          onDone={() => setPhase('form')}
+          onDone={() => {
+            if (phase === 'confirmed') navigate('/dashboard');
+            else setPhase('form');
+          }}
           onVerify={async (ref, attempt) => {
             if (await checkPaymentStatus(ref)) return 'confirmed';
             return attempt >= 20 ? 'unconfirmed' : 'verifying';

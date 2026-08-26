@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Check } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import NetworkSelector from '../components/NetworkSelector';
@@ -8,6 +9,7 @@ import { formatCurrency } from '../utils/helpers';
 
 export default function DataScreen() {
   const { wallet, fetchBalance } = useAuth();
+  const navigate = useNavigate();
   const [network, setNetwork] = useState(null);
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
@@ -39,7 +41,8 @@ export default function DataScreen() {
     }, 100);
   };
 
-  const canBuy = network && selectedPlan && phone.length === 11;
+  const canBuy = network && selectedPlan && phone.length === 11 && wallet.balance >= selectedPlan.amount;
+  const insufficient = selectedPlan && wallet.balance < selectedPlan.amount;
 
   const handleBuy = async () => {
     setLoading(true);
@@ -65,6 +68,8 @@ export default function DataScreen() {
   };
 
   if (success) {
+    // Auto-return to dashboard after a successful purchase
+    setTimeout(() => navigate('/dashboard'), 2500);
     return (
       <div className="min-h-screen bg-[#F4F6F9]">
         <TopBar title="Data Bundles" onBack={() => setSuccess(null)} />
@@ -75,7 +80,8 @@ export default function DataScreen() {
           <h2 className="text-xl font-bold text-[#0A192F] mb-1">Data Purchase Successful!</h2>
           <p className="text-gray-500 text-sm mb-2">{success.plan.size} sent to {phone}</p>
           <p className="text-gray-400 text-xs">Ref: {success.reference}</p>
-          <button onClick={() => { setSuccess(null); setPhone(''); setSelectedPlan(null); }} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+          <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Go to Dashboard</button>
         </div>
       </div>
     );
@@ -154,11 +160,14 @@ export default function DataScreen() {
                 <span className="text-gray-500 text-[13px] font-bold">Available Balance</span>
                 <span className={`text-[15px] font-bold ${wallet.balance < selectedPlan.amount ? 'text-red-500' : 'text-[#D4AF37]'}`}>{formatCurrency(wallet.balance)}</span>
               </div>
+              {insufficient && (
+                <p className="text-red-500 text-[11px] mt-1">Insufficient balance — please fund your wallet first.</p>
+              )}
             </div>
 
             {error && <p className="text-red-500 text-xs">{error}</p>}
 
-            <button onClick={handleBuy} disabled={!canBuy || loading} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+            <button onClick={handleBuy} disabled={!canBuy} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
               {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'BUY DATA'}
             </button>
           </>

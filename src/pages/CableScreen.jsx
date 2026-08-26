@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import API from '../services/api';
@@ -14,6 +15,7 @@ const PROVIDERS = [
 
 export default function CableScreen() {
   const { wallet, fetchBalance } = useAuth();
+  const navigate = useNavigate();
   const [provider, setProvider] = useState(null);
   const [cardNo, setCardNo] = useState('');
   const [verifyData, setVerifyData] = useState(null);
@@ -59,6 +61,8 @@ export default function CableScreen() {
   };
 
   if (success) {
+    // Auto-return to dashboard after a successful purchase
+    setTimeout(() => navigate('/dashboard'), 2500);
     return (
       <div className="min-h-screen bg-[#F4F6F9]">
         <TopBar title="Cable TV" onBack={() => setSuccess(null)} />
@@ -66,7 +70,8 @@ export default function CableScreen() {
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4"><svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
           <h2 className="text-xl font-bold text-[#0A192F] mb-1">Cable Subscription Successful!</h2>
           <p className="text-gray-500 text-sm">{success.product_name} — {formatCurrency(success.amount)}</p>
-          <button onClick={() => { setSuccess(null); setVerifyData(null); setCardNo(''); setSelectedPlan(null); }} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+          <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Go to Dashboard</button>
         </div>
       </div>
     );
@@ -123,7 +128,10 @@ export default function CableScreen() {
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
             </div>
             {error && <p className="text-red-500 text-xs">{error}</p>}
-            <button onClick={handleBuy} disabled={loading || !phone} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+            {wallet.balance < selectedPlan.amount && (
+              <p className="text-red-500 text-[11px]">Insufficient balance — please fund your wallet first.</p>
+            )}
+            <button onClick={handleBuy} disabled={loading || !phone || wallet.balance < selectedPlan.amount} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
               {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'PAY SUBSCRIPTION'}
             </button>
           </>

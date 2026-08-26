@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getSession, setSession, clearAuth } from '../utils/storage';
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL || 'https://dreamhatcher-paystack-backend.onrender.com',
@@ -7,7 +8,7 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((config) => {
-  const session = JSON.parse(localStorage.getItem('vtu_session') || 'null');
+  const session = getSession();
   if (session?.access_token) {
     config.headers.Authorization = `Bearer ${session.access_token}`;
   }
@@ -21,7 +22,7 @@ API.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const session = JSON.parse(localStorage.getItem('vtu_session') || 'null');
+        const session = getSession();
         if (session?.refresh_token) {
           const res = await axios.post(
             `${API.defaults.baseURL}/auth/refresh`,
@@ -29,14 +30,13 @@ API.interceptors.response.use(
           );
           if (res.data.success) {
             const newSession = { ...session, ...res.data.session };
-            localStorage.setItem('vtu_session', JSON.stringify(newSession));
+            setSession(newSession, true);
             originalRequest.headers.Authorization = `Bearer ${res.data.session.access_token}`;
             return API(originalRequest);
           }
         }
       } catch {
-        localStorage.removeItem('vtu_session');
-        localStorage.removeItem('vtu_user');
+        clearAuth();
         window.location.hash = '#/login';
       }
     }
