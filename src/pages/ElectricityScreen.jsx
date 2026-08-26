@@ -49,7 +49,8 @@ export default function ElectricityScreen() {
       if (res.data.success) {
         if (res.data.token) setToken(res.data.token);
         setSuccess(true);
-        fetchBalance();
+        if (res.data.balance !== undefined) { localStorage.setItem('vtu_wallet', JSON.stringify({ balance: res.data.balance })); }
+        fetchBalance(true);
       } else {
         setError(res.data.message || 'Payment failed');
       }

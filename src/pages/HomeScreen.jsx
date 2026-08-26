@@ -49,7 +49,7 @@ export default function HomeScreen() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
 
-  useEffect(() => { fetchBalance(); }, []);
+  useEffect(() => { fetchBalance(true); }, []);
 
   const initials = (user?.full_name || user?.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 

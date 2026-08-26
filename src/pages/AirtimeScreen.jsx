@@ -34,7 +34,12 @@ export default function AirtimeScreen() {
       });
       if (res.data.success) {
         setSuccess({ amount, reference: res.data.reference });
-        fetchBalance();
+        // Update balance from API response immediately
+        if (res.data.balance !== undefined) {
+          const wb = { balance: res.data.balance };
+          localStorage.setItem('vtu_wallet', JSON.stringify(wb));
+        }
+        fetchBalance(true);
       } else {
         setError(res.data.message || 'Purchase failed');
       }

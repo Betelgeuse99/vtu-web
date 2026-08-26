@@ -52,7 +52,7 @@ export default function CableScreen() {
       const res = await API.post('/api/v2/vtu/cable/purchase', {
         cable_type: provider.id, card_no: cardNo, phone_number: phone, amount: selectedPlan.amount, Customer: verifyData?.customerName || ''
       });
-      if (res.data.success) { setSuccess(selectedPlan); fetchBalance(); }
+      if (res.data.success) { setSuccess(selectedPlan); if (res.data.balance !== undefined) { localStorage.setItem('vtu_wallet', JSON.stringify({ balance: res.data.balance })); } fetchBalance(true); }
       else setError(res.data.message || 'Purchase failed');
     } catch (err) { setError(err.response?.data?.message || 'Purchase failed'); }
     setLoading(false);

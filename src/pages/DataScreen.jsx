@@ -40,7 +40,11 @@ export default function DataScreen() {
       });
       if (res.data.success) {
         setSuccess({ plan: selectedPlan, reference: res.data.reference });
-        fetchBalance();
+        if (res.data.balance !== undefined) {
+          const wb = { balance: res.data.balance };
+          localStorage.setItem('vtu_wallet', JSON.stringify(wb));
+        }
+        fetchBalance(true);
       } else {
         setError(res.data.message || 'Purchase failed');
       }

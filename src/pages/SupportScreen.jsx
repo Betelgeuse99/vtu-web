@@ -3,10 +3,10 @@ import TopBar from '../components/TopBar';
 import { Globe, MessageCircle, Rocket, Phone, ChevronRight } from 'lucide-react';
 
 const ITEMS = [
-  { title: 'Visit Our Website', subtitle: 'Read our blog and updates', icon: Globe, action: () => window.open('https://dreamhatcher.ink', '_blank') },
-  { title: 'Chat on WhatsApp', subtitle: 'Quick support via WhatsApp', icon: MessageCircle, action: () => window.open('https://wa.me/2348000000000', '_blank') },
+  { title: 'Visit Our Website', subtitle: 'Read our blog and updates', icon: Globe, action: () => window.open('https://dreamhatcher.blogspot.com', '_blank') },
+  { title: 'Chat on WhatsApp', subtitle: 'Quick support via WhatsApp', icon: MessageCircle, action: () => window.open('https://wa.me/2347037412314', '_blank') },
   { title: 'Live Chat Support', subtitle: 'Chat with our support team', icon: Rocket, soon: true },
-  { title: 'Phone Support', subtitle: 'Call us for assistance', icon: Phone, soon: true },
+  { title: 'Phone Support', subtitle: 'Call us for assistance', icon: Phone, action: () => window.open('tel:+2347037412314') },
 ];
 
 export default function SupportScreen() {
@@ -19,18 +19,18 @@ export default function SupportScreen() {
         {ITEMS.map((item) => {
           const Icon = item.icon;
           return (
-            <button key={item.title} onClick={() => item.soon ? setShowSoon(true) : item.action?.()} className="w-full bg-white rounded-xl p-4 flex items-center gap-3 shadow-sm border border-gray-100">
-              <div className="w-12 h-12 rounded-lg bg-[#0A192F]/10 flex items-center justify-center">
+            <button key={item.title} onClick={() => item.soon ? setShowSoon(true) : item.action?.()} className="w-full bg-white rounded-xl p-4 flex items-center gap-3 shadow-sm border border-gray-100 active:bg-gray-50">
+              <div className="w-12 h-12 rounded-lg bg-[#0A192F]/10 flex items-center justify-center shrink-0">
                 <Icon className="w-5 h-5 text-[#0A192F]" />
               </div>
-              <div className="flex-1 text-left">
+              <div className="flex-1 text-left min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-[16px] font-bold text-[#0A192F]">{item.title}</p>
                   {item.soon && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-xl bg-[#FEF3C7] text-[#92400E]">SOON</span>}
                 </div>
                 <p className="text-[13px] text-gray-500">{item.subtitle}</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300" />
+              <ChevronRight className="w-5 h-5 text-gray-300 shrink-0" />
             </button>
           );
         })}

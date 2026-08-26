@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import TopBar from '../components/TopBar';
 import StatusBadge from '../components/StatusBadge';
 import API from '../services/api';
 import { formatCurrency } from '../utils/helpers';
-import { Phone, Globe, Zap, Tv, Receipt } from 'lucide-react';
+import { Phone, Globe, Zap, Tv, Receipt, RefreshCw } from 'lucide-react';
 
 const ICON_MAP = {
   airtime: { icon: Phone, bg: '#DCFCE7' },
@@ -20,17 +20,31 @@ export default function TransactionsScreen() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => {
-    API.get('/api/v2/transactions')
-      .then((res) => setTxns(res.data.data || res.data.transactions || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+  const fetchTxns = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await API.get('/transactions');
+      setTxns(res.data.data || res.data.transactions || []);
+    } catch {
+      try {
+        const res2 = await API.get('/api/v2/transactions');
+        setTxns(res2.data.data || res2.data.transactions || []);
+      } catch {
+        setTxns([]);
+      }
+    }
+    setLoading(false);
   }, []);
+
+  useEffect(() => { fetchTxns(); }, [fetchTxns]);
 
   return (
     <div className="min-h-screen bg-[#F4F6F9]">
       <TopBar title="Transaction History" onBack />
       <div className="px-4 pt-2">
+        <div className="flex justify-end mb-2">
+          <button onClick={fetchTxns} className="p-2 text-gray-400"><RefreshCw className="w-4 h-4" /></button>
+        </div>
         {loading ? (
           <div className="flex justify-center py-10"><div className="w-8 h-8 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /></div>
         ) : txns.length === 0 ? (
@@ -45,15 +59,15 @@ export default function TransactionsScreen() {
               const iconInfo = ICON_MAP[tx.service_type] || ICON_MAP.funding;
               const Icon = iconInfo.icon;
               return (
-                <button key={tx.id} onClick={() => setSelected(tx)} className="w-full flex items-center gap-3 bg-white rounded-xl p-3 border border-gray-100">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: tx.status === 'successful' ? '#DCFCE7' : tx.status === 'failed' ? '#FEE2E2' : '#FEF3C7' }}>
+                <button key={tx.id} onClick={() => setSelected(tx)} className="w-full flex items-center gap-3 bg-white rounded-xl p-3 border border-gray-100 active:bg-gray-50">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: tx.status === 'successful' ? '#DCFCE7' : tx.status === 'failed' ? '#FEE2E2' : '#FEF3C7' }}>
                     <Icon className="w-5 h-5 text-[#0A192F]" />
                   </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-[15px] font-bold text-[#0A192F]">{tx.title || tx.service_type}</p>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-[15px] font-bold text-[#0A192F] truncate">{tx.title || tx.service_type}</p>
                     <p className="text-xs text-gray-400">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : ''}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="text-[15px] font-bold text-[#0A192F]">-{formatCurrency(tx.amount)}</p>
                     <StatusBadge status={tx.status} />
                   </div>
@@ -64,7 +78,6 @@ export default function TransactionsScreen() {
         )}
       </div>
 
-      {/* Details Modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSelected(null)} />
@@ -77,10 +90,10 @@ export default function TransactionsScreen() {
             </div>
             <div className="bg-white rounded-2xl p-4 space-y-2 text-sm">
               <p className="font-bold text-gray-500 text-[14px] mb-2">Transaction Details</p>
-              <div className="flex justify-between"><span className="text-gray-500">Recipient</span><span className="font-medium">{selected.recipient}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Type</span><span className="font-medium">{selected.service_type}</span></div>
-              {selected.reference && <div className="flex justify-between"><span className="text-gray-500">Reference</span><span className="font-medium text-xs">{selected.reference}</span></div>}
-              <div className="flex justify-between"><span className="text-gray-500">Date</span><span className="font-medium">{selected.created_at ? new Date(selected.created_at).toLocaleString() : ''}</span></div>
+              <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Recipient</span><span className="font-medium text-right truncate">{selected.recipient}</span></div>
+              <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Type</span><span className="font-medium">{selected.service_type}</span></div>
+              {selected.reference && <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Reference</span><span className="font-medium text-xs text-right truncate">{selected.reference}</span></div>}
+              <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Date</span><span className="font-medium text-right">{selected.created_at ? new Date(selected.created_at).toLocaleString() : ''}</span></div>
             </div>
             <button onClick={() => setSelected(null)} className="w-full py-4 mt-4 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
           </div>

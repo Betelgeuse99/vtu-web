@@ -45,7 +45,17 @@ export default function OtpVerifyScreen() {
         email, otp: otpValue || otp.join(''), full_name: fullName, phone_number: phoneNumber, password
       });
       if (res.data.success) {
-        login(res.data.user, { access_token: '', refresh_token: '', user: res.data.user });
+        // After verification, login to get a real session token
+        try {
+          const loginRes = await API.post('/auth/login', { email, password });
+          if (loginRes.data.success) {
+            login(loginRes.data.user, { ...loginRes.data.session, wallet: loginRes.data.wallet });
+          } else {
+            login(res.data.user, { access_token: '', refresh_token: '' });
+          }
+        } catch {
+          login(res.data.user, { access_token: '', refresh_token: '' });
+        }
         navigate('/dashboard');
       } else {
         setError(res.data.message || 'Verification failed');

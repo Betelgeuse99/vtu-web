@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 
 export default function BottomNav({ onMore }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 sm:max-w-md sm:mx-auto bg-white border-t border-gray-200 z-50">
       <div className="flex justify-around items-center h-16 px-1">
         {NAV_ITEMS.map(({ label, path, icon: Icon }) => (
           <NavLink

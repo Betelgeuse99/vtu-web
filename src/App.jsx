@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import BottomNav from './components/BottomNav';
 import { Phone, Globe, Tv, Lightbulb, GraduationCap, Wallet, Receipt, X } from 'lucide-react';
@@ -40,9 +40,11 @@ const MORE_ITEMS = [
   { label: 'Transaction Log', icon: Receipt, route: '/transactions' },
 ];
 
+const AUTH_ROUTES = ['/onboarding', '/welcome', '/login', '/register', '/otp-verify', '/forgot-password', '/reset-password'];
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#F4F6F9]"><div className="w-8 h-8 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /></div>;
   return user ? children : <Navigate to="/welcome" />;
 }
 
@@ -55,11 +57,13 @@ function PublicRoute({ children }) {
 function AppShell() {
   const [moreOpen, setMoreOpen] = useState(false);
   const navigate = useNavigate();
-  const showNavRoutes = ['/dashboard', '/airtime', '/data', '/fund-wallet', '/transactions', '/electricity', '/cable', '/education', '/support', '/account', '/recharge-pins', '/airtime2cash', '/identity', '/rewards', '/cac-register'];
+  const location = useLocation();
+  const { user } = useAuth();
+  const showNav = user && !AUTH_ROUTES.includes(location.pathname);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-[#F4F6F9] relative flex flex-col shadow-2xl overflow-x-hidden">
-      <div className="flex-1 pb-16">
+    <div className="min-h-screen bg-[#F4F6F9] relative flex flex-col mx-auto w-full max-w-[100vw] sm:max-w-md sm:shadow-2xl overflow-x-hidden">
+      <div className={`flex-1 ${showNav ? 'pb-20' : ''}`}>
         <Routes>
           <Route path="/onboarding" element={<PublicRoute><OnboardingScreen /></PublicRoute>} />
           <Route path="/welcome" element={<PublicRoute><WelcomeScreen /></PublicRoute>} />
@@ -90,7 +94,7 @@ function AppShell() {
         </Routes>
       </div>
 
-      <BottomNav onMore={() => setMoreOpen(true)} />
+      {showNav && <BottomNav onMore={() => setMoreOpen(true)} />}
 
       {/* More Bottom Sheet */}
       {moreOpen && (
