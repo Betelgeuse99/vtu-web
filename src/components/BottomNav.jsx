@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 
 export default function BottomNav({ onMore }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 sm:max-w-md sm:mx-auto bg-white border-t border-gray-200 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 sm:max-w-md sm:mx-auto bg-white dark:bg-[#0A192F] border-t border-gray-200 dark:border-slate-800 z-50">
       <div className="flex justify-around items-center h-16 px-1">
         {NAV_ITEMS.map(({ label, path, icon: Icon }) => (
           <NavLink
@@ -19,7 +19,7 @@ export default function BottomNav({ onMore }) {
             to={path}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center flex-1 py-1 transition-all ${
-                isActive ? 'text-[#0A192F]' : 'text-gray-400'
+                isActive ? 'text-[#0A192F] dark:text-[#D4AF37]' : 'text-gray-400 dark:text-slate-500'
               }`
             }
           >
@@ -27,7 +27,7 @@ export default function BottomNav({ onMore }) {
             <span className="text-[11px] font-medium">{label}</span>
           </NavLink>
         ))}
-        <button onClick={onMore} className="flex flex-col items-center justify-center flex-1 py-1 text-gray-400">
+        <button onClick={onMore} className="flex flex-col items-center justify-center flex-1 py-1 text-gray-400 dark:text-slate-500">
           <MoreHorizontal className="w-5 h-5 mb-1" />
           <span className="text-[11px] font-medium">More</span>
         </button>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import BottomNav from './components/BottomNav';
 import { Phone, Globe, Tv, Lightbulb, GraduationCap, Wallet, Receipt, X } from 'lucide-react';
 
@@ -62,7 +63,7 @@ function AppShell() {
   const showNav = user && !AUTH_ROUTES.includes(location.pathname);
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9] relative flex flex-col mx-auto w-full max-w-[100vw] sm:max-w-md sm:shadow-2xl overflow-x-hidden">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F] relative flex flex-col mx-auto w-full max-w-[100vw] sm:max-w-md sm:shadow-2xl overflow-x-clip">
       <div className={`flex-1 ${showNav ? 'pb-20' : ''}`}>
         <Routes>
           <Route path="/onboarding" element={<PublicRoute><OnboardingScreen /></PublicRoute>} />
@@ -100,18 +101,18 @@ function AppShell() {
       {moreOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMoreOpen(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-t-2xl p-4 pb-6">
+          <div className="relative w-full max-w-md bg-white dark:bg-[#1E293B] rounded-t-2xl p-4 pb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-[#0A192F]">More Services</h3>
+              <h3 className="text-lg font-bold text-[#0A192F] dark:text-white">More Services</h3>
               <button onClick={() => setMoreOpen(false)}><X className="w-5 h-5 text-gray-400" /></button>
             </div>
             <div className="space-y-1">
               {MORE_ITEMS.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <button key={item.label} onClick={() => { navigate(item.route); setMoreOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 text-left">
-                    <Icon className="w-5 h-5 text-[#0A192F]" />
-                    <span className="text-sm font-medium text-[#0A192F]">{item.label}</span>
+                  <button key={item.label} onClick={() => { navigate(item.route); setMoreOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/40 text-left">
+                    <Icon className="w-5 h-5 text-[#0A192F] dark:text-[#D4AF37]" />
+                    <span className="text-sm font-medium text-[#0A192F] dark:text-slate-100">{item.label}</span>
                   </button>
                 );
               })}
@@ -133,9 +134,11 @@ function RootRedirect() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppShell />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

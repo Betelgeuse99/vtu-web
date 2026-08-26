@@ -38,21 +38,21 @@ export default function RechargePinScreen() {
 
   if (pins) {
     return (
-      <div className="min-h-screen bg-[#F4F6F9]">
+      <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
         <TopBar title="Recharge Card PINs" onBack={() => setPins(null)} />
         <div className="px-6 pt-6">
           <h2 className="text-xl font-bold text-[#0A192F] mb-4">Your PINs</h2>
           <div className="bg-[#F3F4F6] rounded-xl p-4 space-y-2 mb-6">
             <pre className="text-sm font-bold text-[#0A192F] whitespace-pre-wrap">{JSON.stringify(pins, null, 2)}</pre>
           </div>
-          <button onClick={() => { setPins(null); setSelectedPlan(null); }} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+          <button onClick={() => { setPins(null); setSelectedPlan(null); }} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Recharge Card PINs" onBack />
       <div className="px-5 pt-4 space-y-5">
         <div>
@@ -82,7 +82,7 @@ export default function RechargePinScreen() {
             </div>
             <p className="text-lg font-bold text-[#0A192F]">Total: {formatCurrency((selectedPlan.regular_price || selectedPlan.amount || 0) * quantity)}</p>
             {error && <p className="text-red-500 text-xs">{error}</p>}
-            <button onClick={handleBuy} disabled={loading} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+            <button onClick={handleBuy} disabled={loading} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
               {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'Generate PINs'}
             </button>
           </>

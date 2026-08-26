@@ -13,7 +13,7 @@ export default function SupportScreen() {
   const [showSoon, setShowSoon] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Help & Support" />
       <div className="px-5 pt-4 space-y-3">
         {ITEMS.map((item) => {
@@ -42,7 +42,7 @@ export default function SupportScreen() {
             <Rocket className="w-10 h-10 text-[#D4AF37] mx-auto mb-3" />
             <h3 className="text-lg font-bold text-[#0A192F] mb-1">Coming Soon!</h3>
             <p className="text-sm text-gray-500 mb-4">This feature is under development.</p>
-            <button onClick={() => setShowSoon(false)} className="px-6 py-2.5 bg-[#0A192F] text-[#D4AF37] rounded-xl text-sm font-bold">OK</button>
+            <button onClick={() => setShowSoon(false)} className="px-6 py-2.5 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-sm font-bold">OK</button>
           </div>
         </div>
       )}

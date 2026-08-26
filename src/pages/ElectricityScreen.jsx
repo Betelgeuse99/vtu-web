@@ -64,7 +64,7 @@ export default function ElectricityScreen() {
     // Auto-return to dashboard after the token is displayed (give time to copy it).
     setTimeout(() => navigate('/dashboard'), 10000);
     return (
-      <div className="min-h-screen bg-[#F4F6F9]">
+      <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
         <TopBar title="Electricity Bill" onBack={() => setToken(null)} />
         <div className="px-6 pt-10 text-center">
           <h2 className="text-xl font-bold text-[#0A192F] mb-4">Payment Successful!</h2>
@@ -73,14 +73,14 @@ export default function ElectricityScreen() {
             <p className="text-[22px] font-extrabold text-[#0A192F] tracking-[2px]">{token}</p>
           </div>
           <p className="text-[11px] text-emerald-600 mb-3 font-medium">Returning to dashboard...</p>
-          <button onClick={() => navigate('/dashboard')} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Electricity Bill" onBack />
       <div className="px-5 pt-4 space-y-5">
         {/* Disco Selector */}
@@ -144,7 +144,7 @@ export default function ElectricityScreen() {
             {amount && Number(amount) >= 500 && wallet.balance < Number(amount) && (
               <p className="text-red-500 text-[11px]">Insufficient balance — please fund your wallet first.</p>
             )}
-            <button onClick={handlePay} disabled={loading || !amount || !phone || Number(amount) < 500 || wallet.balance < Number(amount)} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+            <button onClick={handlePay} disabled={loading || !amount || !phone || Number(amount) < 500 || wallet.balance < Number(amount)} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
               {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'PAY ELECTRICITY BILL'}
             </button>
           </>

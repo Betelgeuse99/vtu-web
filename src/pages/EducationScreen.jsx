@@ -33,7 +33,7 @@ export default function EducationScreen() {
 
   if (pins) {
     return (
-      <div className="min-h-screen bg-[#F4F6F9]">
+      <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
         <TopBar title="Exam Result PINs" onBack={() => setPins(null)} />
         <div className="px-6 pt-6">
           <h2 className="text-xl font-bold text-[#0A192F] mb-4">Your PINs</h2>
@@ -42,14 +42,14 @@ export default function EducationScreen() {
               <p key={i} className="text-base font-bold text-[#0A192F]">{typeof pin === 'string' ? pin : pin.pin || JSON.stringify(pin)}</p>
             ))}
           </div>
-          <button onClick={() => { setPins(null); setSelectedExam(null); }} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+          <button onClick={() => { setPins(null); setSelectedExam(null); }} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Exam Result PINs" onBack />
       <div className="px-5 pt-4 space-y-5">
         <div>
@@ -81,7 +81,7 @@ export default function EducationScreen() {
 
             {error && <p className="text-red-500 text-xs">{error}</p>}
 
-            <button onClick={handleBuy} disabled={loading} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+            <button onClick={handleBuy} disabled={loading} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
               {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'Buy PINs'}
             </button>
           </>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Eye, EyeOff, Plus, RefreshCw, Phone, Globe, Tv, Lightbulb, GraduationCap, Ticket, ArrowLeftRight, ShieldCheck, Gift, X, Wallet, Receipt, HelpCircle, User, LogOut } from 'lucide-react';
+import { Menu, Eye, EyeOff, Plus, RefreshCw, Phone, Globe, Tv, Lightbulb, GraduationCap, Ticket, ArrowLeftRight, ShieldCheck, Gift, X, Wallet, Receipt, HelpCircle, User, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { formatCurrency } from '../utils/helpers';
-import API from '../services/api';
 
 const VTU_SERVICES = [
   { title: 'Airtime Top-up', icon: Phone, bg: '#EFF6FF', route: '/airtime' },
@@ -45,22 +45,26 @@ const DRAWER_ITEMS = [
 export default function HomeScreen() {
   const navigate = useNavigate();
   const { user, wallet, fetchBalance, logout } = useAuth();
+  const { dark, toggle } = useTheme();
   const [showBalance, setShowBalance] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   useEffect(() => { fetchBalance(true); }, []);
 
   const initials = (user?.full_name || user?.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9] pb-20">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F] pb-20">
       {/* Top App Bar */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-30">
-        <button onClick={() => setDrawerOpen(true)} className="p-1"><Menu className="w-6 h-6 text-[#0A192F]" /></button>
-        <h1 className="text-base font-bold text-[#0A192F]">Dreamhatcher VTU</h1>
-        <button onClick={() => setPanelOpen(true)} className="w-9 h-9 rounded-[20px] bg-[#D4AF37] flex items-center justify-center text-[#0A192F] font-bold text-sm">
-          {initials}
+      <div className="bg-white dark:bg-[#0A192F] px-4 py-3 flex items-center justify-between sticky top-0 z-30 border-b border-gray-100 dark:border-slate-800">
+        <button onClick={() => setDrawerOpen(true)} className="p-1"><Menu className="w-6 h-6 text-[#0A192F] dark:text-white" /></button>
+        <h1 className="text-base font-bold text-[#0A192F] dark:text-white">Dreamhatcher VTU</h1>
+        <button
+          onClick={toggle}
+          aria-label="Toggle dark mode"
+          className="w-9 h-9 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#0A192F] font-bold text-sm"
+        >
+          {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </button>
       </div>
 
@@ -89,24 +93,24 @@ export default function HomeScreen() {
         </div>
 
         {/* Rewards Card */}
-        <div className="bg-white rounded-xl p-4 mb-5 border border-gray-100">
+        <div className="bg-white dark:bg-[#1E293B] rounded-xl p-4 mb-5 border border-gray-100 dark:border-slate-700">
           <div className="flex items-center gap-4">
             <Gift className="w-8 h-8 text-[#D4AF37]" />
             <div className="flex-1">
-              <p className="text-gray-500 text-xs">Cashback</p>
-              <p className="font-bold text-sm">₦0</p>
+              <p className="text-gray-500 dark:text-slate-400 text-xs">Cashback</p>
+              <p className="font-bold text-sm text-[#0A192F] dark:text-white">₦0</p>
             </div>
-            <div className="w-px h-[30px] bg-gray-200" />
+            <div className="w-px h-[30px] bg-gray-200 dark:bg-slate-700" />
             <div className="flex-1 text-center">
-              <p className="text-gray-500 text-xs">Points</p>
-              <p className="font-bold text-sm">0</p>
+              <p className="text-gray-500 dark:text-slate-400 text-xs">Points</p>
+              <p className="font-bold text-sm text-[#0A192F] dark:text-white">0</p>
             </div>
-            <button className="bg-[#0A192F] text-[#D4AF37] px-3 py-1.5 rounded-2xl text-[11px] font-bold">Earn Now</button>
+            <button className="bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] px-3 py-1.5 rounded-2xl text-[11px] font-bold">Earn Now</button>
           </div>
         </div>
 
         {/* VTU & Bill Payments */}
-        <p className="text-gray-500 text-[13px] font-bold mb-3 tracking-wide">VTU & BILL PAYMENTS</p>
+        <p className="text-gray-500 dark:text-slate-400 text-[13px] font-bold mb-3 tracking-wide">VTU & BILL PAYMENTS</p>
         <div className="grid grid-cols-3 gap-3 mb-5">
           {VTU_SERVICES.map((svc) => {
             const Icon = svc.icon;
@@ -166,24 +170,6 @@ export default function HomeScreen() {
             <p className="text-gray-500 text-xs text-center mt-6 pb-4">Version 1.1</p>
           </div>
           <div className="flex-1 bg-black/40" onClick={() => setDrawerOpen(false)} />
-        </div>
-      )}
-
-      {/* User Panel Bottom Sheet */}
-      {panelOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setPanelOpen(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-t-2xl p-6 pb-8">
-            <div className="flex flex-col items-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-[#0A192F] flex items-center justify-center text-[#D4AF37] font-bold text-2xl mb-3">{initials}</div>
-              <p className="text-[20px] font-bold text-[#0A192F]">{user?.full_name || user?.name || 'User'}</p>
-              <span className="text-xs font-extrabold px-3 py-1 rounded-xl bg-[#D1FAE5] text-[#065F46] mt-2">ACTIVE</span>
-            </div>
-            <div className="border-t border-gray-200 pt-3">
-              <button onClick={() => { navigate('/account'); setPanelOpen(false); }} className="w-full py-3 border border-gray-300 rounded-xl text-sm font-bold text-[#0A192F] mb-2">Complete your KYC</button>
-              <button onClick={() => { logout(); navigate('/welcome'); setPanelOpen(false); }} className="w-full py-3 bg-red-500 text-white rounded-xl text-sm font-bold">Logout</button>
-            </div>
-          </div>
         </div>
       )}
     </div>

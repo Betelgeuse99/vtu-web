@@ -33,20 +33,20 @@ export default function AirtimeToCashScreen() {
 
   if (result) {
     return (
-      <div className="min-h-screen bg-[#F4F6F9]">
+      <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
         <TopBar title="Airtime to Cash" onBack={() => setResult(null)} />
         <div className="px-6 pt-10 text-center">
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4"><svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
           <h2 className="text-xl font-bold text-[#0A192F] mb-2">Conversion Submitted!</h2>
           <p className="text-gray-500 text-sm mb-6">{result.message || 'Your airtime conversion is being processed.'}</p>
-          <button onClick={() => { setResult(null); setAmount(''); setPhone(''); }} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+          <button onClick={() => { setResult(null); setAmount(''); setPhone(''); }} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Airtime to Cash" onBack />
       <div className="px-5 pt-4 space-y-5">
         <div>
@@ -87,7 +87,7 @@ export default function AirtimeToCashScreen() {
 
         {error && <p className="text-red-500 text-xs">{error}</p>}
 
-        <button onClick={handleSubmit} disabled={loading || !network || !phone || !amount} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+        <button onClick={handleSubmit} disabled={loading || !network || !phone || !amount} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
           {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'I Have Transferred Airtime'}
         </button>
       </div>

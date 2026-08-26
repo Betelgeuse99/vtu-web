@@ -27,14 +27,14 @@ export default function IdentityScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Identity Verification" onBack />
       <div className="px-5 pt-4 space-y-5">
         <p className="text-gray-500 text-sm">Verify your identity for enhanced account features.</p>
 
         <div className="flex gap-3">
           {['nin', 'bvn'].map((t) => (
-            <button key={t} onClick={() => { setIdType(t); setResult(null); }} className={`flex-1 py-2.5 rounded-full border text-sm font-bold transition-all ${idType === t ? 'bg-[#0A192F] text-[#D4AF37] border-[#0A192F]' : 'bg-white border-gray-300 text-gray-500'}`}>
+            <button key={t} onClick={() => { setIdType(t); setResult(null); }} className={`flex-1 py-2.5 rounded-full border text-sm font-bold transition-all ${idType === t ? 'bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] border-[#0A192F]' : 'bg-white border-gray-300 text-gray-500'}`}>
               {t.toUpperCase()}
             </button>
           ))}
@@ -86,7 +86,7 @@ export default function IdentityScreen() {
 
         <p className="text-gray-400 text-[11px]">Verification fee may apply.</p>
 
-        <button onClick={handleVerify} disabled={loading || (idType === 'nin' ? nin.length < 11 : bvn.length < 11)} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+        <button onClick={handleVerify} disabled={loading || (idType === 'nin' ? nin.length < 11 : bvn.length < 11)} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
           {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'Verify Identity'}
         </button>
       </div>

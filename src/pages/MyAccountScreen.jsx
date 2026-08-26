@@ -10,7 +10,7 @@ export default function MyAccountScreen() {
   const initials = (user?.full_name || user?.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="My Account" />
       <div className="px-5 pt-4">
         {/* Avatar */}

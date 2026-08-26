@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 * {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
@@ -20,6 +23,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
+}
+
+html.dark body {
+  background: #0A192F;
 }
 
 #root {
@@ -58,6 +65,9 @@ button {
 @media (min-width: 640px) {
   body {
     background: #e5e7eb;
+  }
+  html.dark body {
+    background: #050e1d;
   }
   #root {
     max-width: 28rem;

@@ -19,17 +19,18 @@ export default function FundWalletScreen() {
   const checkoutAmountRef = useRef(0);
   // Synchronous guard against double-clicks / duplicate submissions.
   const proceedGuardRef = useRef(false);
-  const refCounterRef = useRef(0);
 
   const email = user?.email || '';
 
   const hasSession = () => Boolean(getSession()?.access_token);
 
   const generateReference = () => {
-    // Counter + timestamp + random => collision-proof across rapid clicks.
-    refCounterRef.current += 1;
-    const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
-    return `VTU-${Date.now()}-${refCounterRef.current}-${rand}`;
+    // Collision-proof: crypto random UUID + timestamp. No two initiations can
+    // ever produce the same reference (Squad rejects duplicate refs).
+    const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()
+      : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`.toUpperCase();
+    return `VTU-${Date.now()}-${uuid}`;
   };
 
   const handleProceed = async () => {
@@ -68,7 +69,7 @@ export default function FundWalletScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Fund Wallet" onBack={() => setPhase('form')} />
 
       {phase === 'form' && (
@@ -94,7 +95,7 @@ export default function FundWalletScreen() {
           <button
             onClick={handleProceed}
             disabled={savingPayment || !amount || Number(amount) < MIN_FUNDING_AMOUNT || !user?.id}
-            className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+            className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
           >
             {savingPayment ? (
               <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
@@ -156,9 +157,17 @@ export default function FundWalletScreen() {
 // ============================================================
 function SquadCheckout({ publicKey, email, amount, reference, onPaymentSubmitted, onClose }) {
   const [status, setStatus] = useState('loading'); // loading | error | open
-  const calledRef = useRef(false);
+  const openedRef = useRef(false);
+  // Hold callbacks in refs so parent re-renders (e.g. the 10s balance poll)
+  // can NEVER re-trigger the Squad widget with the same transaction_ref.
+  const onSubmittedRef = useRef(onPaymentSubmitted);
+  const onCloseRef = useRef(onClose);
+  onSubmittedRef.current = onPaymentSubmitted;
+  onCloseRef.current = onClose;
 
   useEffect(() => {
+    if (openedRef.current) return; // open the widget only ONCE per mount
+    openedRef.current = true;
     let cancelled = false;
     let widget = null;
 
@@ -173,14 +182,9 @@ function SquadCheckout({ publicKey, email, amount, reference, onPaymentSubmitted
           transaction_ref: reference,
           payment_channels: ['card', 'bank', 'ussd', 'transfer'],
           onLoad: () => setStatus('open'),
-          onClose: () => { if (!cancelled) onClose(); },
-          onSuccess: (data) => {
-            if (!cancelled && !calledRef.current) {
-              calledRef.current = true;
-              onPaymentSubmitted();
-            }
-          },
-          onError: (err) => { if (!cancelled) setStatus('error'); },
+          onClose: () => { if (!cancelled) onCloseRef.current(); },
+          onSuccess: () => { if (!cancelled) onSubmittedRef.current(); },
+          onError: () => { if (!cancelled) setStatus('error'); },
         });
         if (widget && typeof widget.setup === 'function') widget.setup();
         if (widget && typeof widget.open === 'function') widget.open();
@@ -204,7 +208,7 @@ function SquadCheckout({ publicKey, email, amount, reference, onPaymentSubmitted
       cancelled = true;
       try { if (widget && typeof widget.close === 'function') widget.close(); } catch {}
     };
-  }, [publicKey, email, amount, reference, onClose, onPaymentSubmitted]);
+  }, [publicKey, email, amount, reference]); // callbacks deliberately NOT in deps
 
   return (
     <div className="fixed inset-0 z-50 bg-white">
@@ -282,7 +286,7 @@ function PaymentStatus({ phase, amount, reference, onConfirmed, onDone, onVerify
           <p className="text-sm text-gray-500">If you completed the transfer, your wallet will be credited automatically once it's confirmed. You can close this and check back shortly.</p>
         </>
       )}
-      <button onClick={onDone} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">
+      <button onClick={onDone} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">
         Done
       </button>
     </div>

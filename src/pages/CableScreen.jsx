@@ -46,13 +46,16 @@ export default function CableScreen() {
     setVerifying(false);
   };
 
+  const planPrice = selectedPlan ? Number(selectedPlan.amount ?? selectedPlan.plan_amount ?? 0) : 0;
+  const balance = Number(wallet.balance) || 0;
+
   const handleBuy = async () => {
     if (!selectedPlan || !cardNo || !phone) return;
     setLoading(true);
     setError('');
     try {
       const res = await API.post('/api/v2/vtu/cable/purchase', {
-        cable_type: provider.id, card_no: cardNo, phone_number: phone, amount: selectedPlan.amount, Customer: verifyData?.customerName || ''
+        cable_type: provider.id, card_no: cardNo, phone_number: phone, amount: planPrice, Customer: verifyData?.customerName || ''
       });
       if (res.data.success) { setSuccess(selectedPlan); if (res.data.balance !== undefined) { localStorage.setItem('vtu_wallet', JSON.stringify({ balance: res.data.balance })); } fetchBalance(true); }
       else setError(res.data.message || 'Purchase failed');
@@ -64,21 +67,21 @@ export default function CableScreen() {
     // Auto-return to dashboard after a successful purchase
     setTimeout(() => navigate('/dashboard'), 2500);
     return (
-      <div className="min-h-screen bg-[#F4F6F9]">
+      <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
         <TopBar title="Cable TV" onBack={() => setSuccess(null)} />
         <div className="px-6 pt-10 text-center">
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4"><svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
           <h2 className="text-xl font-bold text-[#0A192F] mb-1">Cable Subscription Successful!</h2>
           <p className="text-gray-500 text-sm">{success.product_name} — {formatCurrency(success.amount)}</p>
           <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
-          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Go to Dashboard</button>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Cable TV" onBack />
       <div className="px-5 pt-4 space-y-5">
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
@@ -128,10 +131,10 @@ export default function CableScreen() {
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
             </div>
             {error && <p className="text-red-500 text-xs">{error}</p>}
-            {wallet.balance < selectedPlan.amount && (
+            {planPrice > 0 && balance < planPrice && (
               <p className="text-red-500 text-[11px]">Insufficient balance — please fund your wallet first.</p>
             )}
-            <button onClick={handleBuy} disabled={loading || !phone || wallet.balance < selectedPlan.amount} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+            <button onClick={handleBuy} disabled={loading || !phone || planPrice <= 0 || balance < planPrice} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
               {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'PAY SUBSCRIPTION'}
             </button>
           </>

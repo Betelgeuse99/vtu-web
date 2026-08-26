@@ -41,15 +41,17 @@ export default function DataScreen() {
     }, 100);
   };
 
-  const canBuy = network && selectedPlan && phone.length === 11 && wallet.balance >= selectedPlan.amount;
-  const insufficient = selectedPlan && wallet.balance < selectedPlan.amount;
+  const planPrice = selectedPlan ? Number(selectedPlan.amount ?? selectedPlan.plan_amount ?? selectedPlan.retail_price ?? 0) : 0;
+  const balance = Number(wallet.balance) || 0;
+  const canBuy = network && selectedPlan && phone.length === 11 && planPrice > 0 && balance >= planPrice;
+  const insufficient = selectedPlan && balance < planPrice;
 
   const handleBuy = async () => {
     setLoading(true);
     setError('');
     try {
       const res = await API.post('/api/v2/vtu/data/purchase', {
-        network: network.slug, plan: selectedPlan.plan_id || selectedPlan.id, phone_number: phone, amount: selectedPlan.amount
+        network: network.slug, plan: selectedPlan.plan_id || selectedPlan.id, phone_number: phone, amount: planPrice
       });
       if (res.data.success) {
         setSuccess({ plan: selectedPlan, reference: res.data.reference });
@@ -71,7 +73,7 @@ export default function DataScreen() {
     // Auto-return to dashboard after a successful purchase
     setTimeout(() => navigate('/dashboard'), 2500);
     return (
-      <div className="min-h-screen bg-[#F4F6F9]">
+      <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
         <TopBar title="Data Bundles" onBack={() => setSuccess(null)} />
         <div className="px-6 pt-10 text-center">
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
@@ -81,14 +83,14 @@ export default function DataScreen() {
           <p className="text-gray-500 text-sm mb-2">{success.plan.size} sent to {phone}</p>
           <p className="text-gray-400 text-xs">Ref: {success.reference}</p>
           <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
-          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Go to Dashboard</button>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Data Bundles" onBack />
       <div className="px-5 pt-4 space-y-5">
         {/* Network Provider */}
@@ -122,7 +124,7 @@ export default function DataScreen() {
                         className={`rounded-xl p-3 text-left border-2 transition-all ${selectedPlan?.id === plan.id ? 'border-[#D4AF37]' : 'border-gray-200'}`}
                       >
                         <p className="text-[18px] font-bold text-[#0A192F]">{plan.size || plan.volume}</p>
-                        <p className="text-[15px] font-bold text-[#D4AF37]">{formatCurrency(plan.amount || plan.plan_amount)}</p>
+                        <p className="text-[15px] font-bold text-[#D4AF37]">{formatCurrency(Number(plan.amount ?? plan.plan_amount ?? plan.retail_price ?? 0))}</p>
                         <p className="text-[11px] font-bold text-[#0A192F]">{plan.validity}</p>
                         <span className="inline-block mt-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-xl bg-[#FEF3C7] text-[#D4AF37]">{plan.plantype || plan.plan_type}</span>
                       </button>
@@ -149,7 +151,7 @@ export default function DataScreen() {
                 <div className="w-10 h-10 rounded-lg bg-[#FEF3C7] flex items-center justify-center"><Check className="w-5 h-5 text-[#D4AF37]" /></div>
                 <div className="flex-1">
                   <p className="text-[11px] text-gray-500">Data Plan</p>
-                  <p className="text-sm font-bold text-[#D4AF37]">{selectedPlan.size || selectedPlan.volume} — {formatCurrency(selectedPlan.amount)}</p>
+                  <p className="text-sm font-bold text-[#D4AF37]">{selectedPlan.size || selectedPlan.volume} — {formatCurrency(planPrice)}</p>
                 </div>
               </div>
               <div>
@@ -158,7 +160,7 @@ export default function DataScreen() {
               </div>
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-gray-500 text-[13px] font-bold">Available Balance</span>
-                <span className={`text-[15px] font-bold ${wallet.balance < selectedPlan.amount ? 'text-red-500' : 'text-[#D4AF37]'}`}>{formatCurrency(wallet.balance)}</span>
+                <span className={`text-[15px] font-bold ${balance < planPrice ? 'text-red-500' : 'text-[#D4AF37]'}`}>{formatCurrency(balance)}</span>
               </div>
               {insufficient && (
                 <p className="text-red-500 text-[11px] mt-1">Insufficient balance — please fund your wallet first.</p>
@@ -167,7 +169,7 @@ export default function DataScreen() {
 
             {error && <p className="text-red-500 text-xs">{error}</p>}
 
-            <button onClick={handleBuy} disabled={!canBuy} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+            <button onClick={handleBuy} disabled={!canBuy} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-[16px] font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
               {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'BUY DATA'}
             </button>
           </>

@@ -57,7 +57,7 @@ export default function AirtimeScreen() {
     // Auto-return to dashboard after a successful purchase
     setTimeout(() => navigate('/dashboard'), 2500);
     return (
-      <div className="min-h-screen bg-[#F4F6F9]">
+      <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
         <TopBar title="Airtime Top-up" onBack={() => setSuccess(null)} />
         <div className="px-6 pt-10 text-center">
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
@@ -67,14 +67,14 @@ export default function AirtimeScreen() {
           <p className="text-gray-500 text-sm mb-2">{formatCurrency(success.amount)} airtime sent to {phone}</p>
           <p className="text-gray-400 text-xs">Ref: {success.reference}</p>
           <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
-          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Go to Dashboard</button>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Airtime Top-up" onBack />
       <div className="px-5 pt-4 space-y-5">
         <div>
@@ -103,7 +103,7 @@ export default function AirtimeScreen() {
           )}
         </div>
 
-        <button onClick={handleBuy} disabled={!canBuy} className="w-full py-4 bg-[#0A192F] text-[#D4AF37] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+        <button onClick={handleBuy} disabled={!canBuy} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
           {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'Buy Airtime'}
         </button>
       </div>

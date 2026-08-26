@@ -71,7 +71,7 @@ export default function TransactionsScreen() {
   }, [fetchTxns]);
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9]">
+    <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Transaction History" onBack />
       <div className="px-4 pt-2">
         <div className="flex items-center justify-between mb-2">
@@ -129,7 +129,7 @@ export default function TransactionsScreen() {
               {selected.reference && <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Reference</span><span className="font-medium text-xs text-right truncate">{selected.reference}</span></div>}
               <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Date</span><span className="font-medium text-right">{selected.created_at ? new Date(selected.created_at).toLocaleString() : ''}</span></div>
             </div>
-            <button onClick={() => setSelected(null)} className="w-full py-4 mt-4 bg-[#0A192F] text-[#D4AF37] rounded-xl font-bold">Done</button>
+            <button onClick={() => setSelected(null)} className="w-full py-4 mt-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
           </div>
         </div>
       )}

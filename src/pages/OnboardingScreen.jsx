@@ -11,8 +11,8 @@ export default function OnboardingScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0A192F] flex flex-col items-center justify-between p-6">
-      <div className="flex-1 flex flex-col items-center justify-center">
+    <div className="h-screen h-[100dvh] overflow-hidden bg-[#0A192F] flex flex-col items-center justify-between p-6">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         <div
           className={`w-[150px] h-[150px] mb-8 rounded-2xl bg-[#D4AF37] flex items-center justify-center transition-all duration-1000 ${opacity ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-75 -rotate-90'}`}
         >
