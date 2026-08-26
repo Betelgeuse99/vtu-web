@@ -1,39 +1,36 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Smartphone, Wifi, History, User } from 'lucide-react';
+import { Home, Wifi, Phone, Grid, User } from 'lucide-react';
 
-const BottomNav = () => {
+export default function BottomNav() {
   const navItems = [
-    { name: 'Home', path: '/', icon: LayoutDashboard },
-    { name: 'Airtime', path: '/airtime', icon: Smartphone },
-    { name: 'Data', path: '/data', icon: Wifi },
-    { name: 'History', path: '/history', icon: History },
-    { name: 'Profile', path: '/profile', icon: User },
+    { label: 'Home', path: '/', icon: Home },
+    { label: 'Data', path: '/data', icon: Wifi },
+    { label: 'Airtime', path: '/airtime', icon: Phone },
+    { label: 'Services', path: '/services', icon: Grid },
+    { label: 'Account', path: '/account', icon: User },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 pb-[env(safe-area-inset-bottom)] max-w-md mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0A192F]/95 backdrop-blur-md border-t border-slate-800 z-50">
       <div className="flex justify-around items-center h-16 px-2">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center w-full h-full py-1 text-xs font-medium transition-colors ${
-                  isActive ? 'text-sky-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
-                }`
-              }
-            >
-              <Icon className="w-5 h-5 mb-1" />
-              <span>{item.name}</span>
-            </NavLink>
-          );
-        })}
+        {navItems.map(({ label, path, icon: Icon }) => (
+          <NavLink
+            key={path}
+            to={path}
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center w-full py-1 text-xs font-medium transition-all ${
+                isActive
+                  ? 'text-[#D4AF37] scale-105'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`
+            }
+          >
+            <Icon className="w-5 h-5 mb-1" />
+            <span>{label}</span>
+          </NavLink>
+        ))}
       </div>
     </nav>
   );
-};
-
-export default BottomNav;
+}
