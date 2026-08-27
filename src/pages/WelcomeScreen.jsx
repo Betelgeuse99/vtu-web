@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import dhtLogo from '../assets/dhtlogo.png';
 
 export default function WelcomeScreen() {
   const navigate = useNavigate();
@@ -7,8 +8,8 @@ export default function WelcomeScreen() {
   return (
     <div className="h-screen h-[100dvh] overflow-hidden bg-[#0A192F] flex flex-col items-center justify-between p-6">
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-        <div className="w-[120px] h-[120px] mb-6 rounded-2xl bg-[#D4AF37] flex items-center justify-center">
-          <span className="text-[#0A192F] font-extrabold text-3xl">DH</span>
+        <div className="w-[120px] h-[120px] mb-6">
+          <img src={dhtLogo} alt="Dreamhatcher" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-[#D4AF37] text-[32px] font-extrabold mb-3">Dreamhatcher</h1>
         <p className="text-white/85 text-[15px] text-center px-6 leading-[22px]">
