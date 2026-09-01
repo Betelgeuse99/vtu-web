@@ -67,6 +67,27 @@ export const AuthProvider = ({ children }) => {
     setWalletState({ balance: 0 });
   };
 
+  // 10-minute inactivity auto-logout (same as the Android app). Any pointer /
+  // key / scroll / touch activity resets the timer; on timeout the session is
+  // cleared and the router bounces to the welcome screen.
+  const logoutRef = useRef(logout);
+  logoutRef.current = logout;
+  useEffect(() => {
+    if (!user?.id) return;
+    let timer = null;
+    const reset = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => logoutRef.current(), 10 * 60 * 1000);
+    };
+    const events = ['pointerdown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
+    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    reset();
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, reset));
+    };
+  }, [user?.id]);
+
   const refreshUser = (userData) => {
     const remember = Boolean(getSession());
     setUser(userData, remember);

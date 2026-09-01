@@ -17,6 +17,24 @@ const pick = (obj, ...keys) => {
   return null;
 };
 
+// The full Nigerian DisCo set (matches the Android app's ALL_DISCOS). The live
+// /electricity/providers endpoint currently omits Benin, Aba and Yola, so we
+// merge them in (deduped by code) to keep web and app identical.
+const KNOWN_DISCOS = [
+  { name: 'Ikeja Electric (IKEDC)', code: 'ikeja-electric' },
+  { name: 'Eko Electric (EKEDC)', code: 'eko-electric' },
+  { name: 'Kano Electric (KEDCO)', code: 'kano-electric' },
+  { name: 'Port Harcourt Electric (PHED)', code: 'portharcourt-electric' },
+  { name: 'Jos Electric (JED)', code: 'jos-electric' },
+  { name: 'Ibadan Electric (IBEDC)', code: 'ibadan-electric' },
+  { name: 'Kaduna Electric (KAEDCO)', code: 'kaduna-electric' },
+  { name: 'Abuja Electric (AEDC)', code: 'abuja-electric' },
+  { name: 'Enugu Electric (EEDC)', code: 'enugu-electric' },
+  { name: 'Benin Electric (BEDC)', code: 'benin-electric' },
+  { name: 'Aba Power (ABP)', code: 'aba-power' },
+  { name: 'Yola Electric (YEDC)', code: 'yola-electric' },
+];
+
 export default function ElectricityScreen() {
   const { wallet, fetchBalance } = useAuth();
   const navigate = useNavigate();
@@ -35,8 +53,12 @@ export default function ElectricityScreen() {
 
   useEffect(() => {
     API.get('/vtu/bills/electricity/providers')
-      .then((res) => setDiscos(res.data.data || []))
-      .catch(() => {});
+      .then((res) => {
+        const apiList = Array.isArray(res.data?.data) ? res.data.data : [];
+        const knownCodes = new Set(apiList.map((d) => d.code).filter(Boolean));
+        setDiscos([...apiList, ...KNOWN_DISCOS.filter((d) => !knownCodes.has(d.code))]);
+      })
+      .catch(() => setDiscos(KNOWN_DISCOS));
   }, []);
 
   const handleVerify = async () => {
@@ -182,16 +204,16 @@ export default function ElectricityScreen() {
       <TopBar title="Electricity Bill" onBack />
       <div className="px-5 pt-4 space-y-5">
         {/* Disco Selector */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-[12px] font-black text-gray-600 tracking-[0.5px] mb-3 uppercase">Select Disco</p>
-          <button onClick={() => setShowDiscoList(!showDiscoList)} className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
+          <p className="text-[12px] font-black text-gray-600 dark:text-slate-400 tracking-[0.5px] mb-3 uppercase">Select Disco</p>
+          <button onClick={() => setShowDiscoList(!showDiscoList)} className="w-full border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-left flex items-center justify-between text-[#0A192F] dark:text-slate-100">
             <span>{selectedDisco?.name || 'Choose provider'}</span>
             <span className="text-gray-400">▼</span>
           </button>
           {showDiscoList && (
-            <div className="mt-2 border border-gray-200 rounded-xl max-h-60 overflow-y-auto">
+            <div className="mt-2 border border-gray-200 dark:border-slate-700 rounded-xl max-h-60 overflow-y-auto dark:bg-[#1E293B]">
               {discos.map((d) => (
-                <button key={d.code} onClick={() => { setSelectedDisco(d); setShowDiscoList(false); }} className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 border-b border-gray-100 last:border-0 font-medium">{d.name}</button>
+                <button key={d.code} onClick={() => { setSelectedDisco(d); setShowDiscoList(false); }} className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 dark:hover:bg-slate-700/40 border-b border-gray-100 dark:border-slate-700 last:border-0 font-medium text-[#0A192F] dark:text-slate-100">{d.name}</button>
               ))}
             </div>
           )}
@@ -200,7 +222,7 @@ export default function ElectricityScreen() {
         {/* Meter Type */}
         <div className="flex gap-3">
           {['prepaid', 'postpaid'].map((type) => (
-            <button key={type} onClick={() => setMeterType(type)} className={`flex-1 py-3 rounded-full border text-sm font-medium flex items-center justify-center gap-2 transition-all ${meterType === type ? 'bg-[#0A192F] text-white border-[#0A192F]' : 'bg-white border-gray-300 text-gray-500'}`}>
+            <button key={type} onClick={() => setMeterType(type)} className={`flex-1 py-3 rounded-full border text-sm font-medium flex items-center justify-center gap-2 transition-all ${meterType === type ? 'bg-[#0A192F] text-white border-[#0A192F] dark:bg-[#D4AF37] dark:text-[#0A192F] dark:border-[#D4AF37]' : 'bg-white dark:bg-[#1E293B] border-gray-300 dark:border-slate-600 text-gray-500 dark:text-slate-300'}`}>
               <Zap className={`w-4 h-4 ${meterType === type ? 'text-[#D4AF37]' : ''}`} />
               {type.charAt(0).toUpperCase() + type.slice(1)}
             </button>
@@ -209,8 +231,8 @@ export default function ElectricityScreen() {
 
         {/* Meter Number */}
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Meter Number</label>
-          <input type="text" value={meterNo} onChange={(e) => setMeterNo(e.target.value)} placeholder="Enter meter number" className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
+          <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Meter Number</label>
+          <input type="text" value={meterNo} onChange={(e) => setMeterNo(e.target.value)} placeholder="Enter meter number" className="w-full bg-white dark:bg-[#1E293B] dark:text-white border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
         </div>
 
         {selectedDisco && meterNo && (
@@ -231,12 +253,12 @@ export default function ElectricityScreen() {
         {verifyData && (
           <>
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Amount (₦)</label>
-              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Min ₦500" className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
+              <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Amount (₦)</label>
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Min ₦500" className="w-full bg-white dark:bg-[#1E293B] dark:text-white border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Phone Number</label>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
+              <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Phone Number</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white dark:bg-[#1E293B] dark:text-white border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
             </div>
             {error && <p className="text-red-500 text-xs">{error}</p>}
             {amount && Number(amount) >= 500 && wallet.balance < Number(amount) && (
