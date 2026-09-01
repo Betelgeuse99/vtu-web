@@ -81,15 +81,21 @@ export default function IdentityScreen() {
               <CheckCircle className="w-5 h-5 text-[#059669]" />
               <p className="text-sm font-bold text-[#065F46]">Verification Result</p>
             </div>
-            <div className="space-y-1 text-sm">
-              <p>Name: <span className="font-bold">{fullNameFromResult() || 'Verified'}</span></p>
-              {result.data?.phoneNumber && <p>Phone: <span className="font-bold">{result.data.phoneNumber}</span></p>}
-              {result.data?.gender && <p>Gender: <span className="font-bold">{result.data.gender}</span></p>}
-              {result.data?.dateOfBirth && <p>DOB: <span className="font-bold">{result.data.dateOfBirth}</span></p>}
-              {idType === 'nin' && (
+            {idType === 'nin' ? (
+              <div className="space-y-1 text-sm">
+                <p>Name: <span className="font-bold">{fullNameFromResult() || 'Verified'}</span></p>
+                {result.data?.phoneNumber && <p>Phone: <span className="font-bold">{result.data.phoneNumber}</span></p>}
+                {result.data?.gender && <p>Gender: <span className="font-bold">{result.data.gender}</span></p>}
+                {result.data?.dateOfBirth && <p>DOB: <span className="font-bold">{result.data.dateOfBirth}</span></p>}
                 <p>NIN Match: <span className="font-bold">{result.data?.match === true ? 'Matched' : 'Confirmed'}</span></p>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-1 text-sm">
+                <p>Name: <span className="font-bold">{result.data?.name?.matchStatus || 'N/A'}{result.data?.name?.matchPercentage != null ? ` (${result.data.name.matchPercentage}%)` : ''}</span></p>
+                <p>Date of Birth: <span className="font-bold">{result.data?.dateOfBirth || 'N/A'}</span></p>
+                <p>Mobile: <span className="font-bold">{result.data?.mobileNo || 'N/A'}</span></p>
+              </div>
+            )}
           </div>
         )}
 
