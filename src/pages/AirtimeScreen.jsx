@@ -69,8 +69,8 @@ export default function AirtimeScreen() {
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
           </div>
-          <h2 className="text-xl font-bold text-[#0A192F] mb-1">Airtime Purchase Successful!</h2>
-          <p className="text-gray-500 text-sm mb-2">{formatCurrency(success.amount)} airtime sent to {phone}</p>
+          <h2 className="text-xl font-bold text-[#0A192F] dark:text-white mb-1">Airtime Purchase Successful!</h2>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mb-2">{formatCurrency(success.amount)} airtime sent to {phone}</p>
           <p className="text-gray-400 text-xs">Ref: {success.reference}</p>
           <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
           <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
@@ -89,8 +89,8 @@ export default function AirtimeScreen() {
           <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
-          <h2 className="text-xl font-bold text-[#0A192F] mb-1">Airtime Being Processed</h2>
-          <p className="text-gray-500 text-sm mb-2">{formatCurrency(pending.amount)} airtime to {phone} is on its way.</p>
+          <h2 className="text-xl font-bold text-[#0A192F] dark:text-white mb-1">Airtime Being Processed</h2>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mb-2">{formatCurrency(pending.amount)} airtime to {phone} is on its way.</p>
           <p className="text-gray-400 text-xs">Ref: {pending.reference}</p>
           <p className="text-[11px] text-amber-600 mt-3 font-medium">Returning to dashboard...</p>
           <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
@@ -104,13 +104,13 @@ export default function AirtimeScreen() {
       <TopBar title="Airtime Top-up" onBack />
       <div className="px-5 pt-4 space-y-5">
         <div>
-          <p className="text-[#0A192F] font-bold text-sm mb-3">Select Network</p>
+          <p className="text-[#0A192F] dark:text-white font-bold text-sm mb-3">Select Network</p>
           <NetworkSelector selected={network} onSelect={setNetwork} />
         </div>
 
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Phone Number</label>
-          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
+          <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Phone Number</label>
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white dark:bg-[#1E293B] dark:text-white border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
         </div>
 
         {isMismatch && (
@@ -121,8 +121,8 @@ export default function AirtimeScreen() {
         )}
 
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Amount (₦)</label>
-          <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`Min ${network?.slug === 'mtn' ? '₦25' : '₦50'}`} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
+          <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Amount (₦)</label>
+          <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`Min ${network?.slug === 'mtn' ? '₦25' : '₦50'}`} className="w-full bg-white dark:bg-[#1E293B] dark:text-white border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
           {amount && insufficient && (
             <p className="text-red-500 text-xs mt-1">Insufficient wallet balance. Available: {formatCurrency(wallet.balance)}</p>

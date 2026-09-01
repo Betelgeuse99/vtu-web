@@ -16,6 +16,31 @@ const ICON_MAP = {
   recharge_pin: { icon: Receipt, bg: '#DCFCE7' },
 };
 
+const FRIENDLY_LABELS = {
+  token: 'Token', units: 'Units', meter_no: 'Meter No.', customer_name: 'Customer Name',
+  customer_address: 'Address', tariff: 'Tariff', pin: 'PIN', pin_id: 'PIN ID',
+  smartcard_no: 'Smartcard No.', plan_name: 'Plan', codedAmount: 'Amount',
+  status: 'Status', message: 'Message', request_id: 'Request ID',
+  transaction_id: 'Transaction ID', response_code: 'Response Code',
+};
+
+function ApiResponseReceipt({ apiResponse }) {
+  if (!apiResponse || typeof apiResponse !== 'object') return null;
+  const entries = Object.entries(apiResponse).filter(([, v]) => v != null && v !== '' && v !== 'null');
+  if (entries.length === 0) return null;
+  return (
+    <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 mb-3">
+      <p className="font-bold text-gray-500 dark:text-slate-400 text-[14px] mb-2">Provider Response</p>
+      {entries.map(([key, value]) => (
+        <div key={key} className="flex justify-between gap-2 py-1">
+          <span className="text-gray-500 dark:text-slate-400 shrink-0 text-xs">{FRIENDLY_LABELS[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+          <span className="font-medium text-right text-xs break-all">{String(value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function TransactionsScreen() {
   const { user } = useAuth();
   const [txns, setTxns] = useState([]);
@@ -115,21 +140,22 @@ export default function TransactionsScreen() {
       {selected && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSelected(null)} />
-          <div className="relative w-full max-w-md bg-[#F8FAFC] rounded-t-2xl p-6 pb-8 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-[18px] font-bold text-[#0A192F] mb-4">Transaction Details</h3>
-            <div className="bg-white rounded-2xl p-4 mb-3">
-              <p className="text-[15px] font-bold text-[#0A192F]">{selected.title}</p>
-              <p className="text-[28px] font-bold text-[#0A192F]">{formatCurrency(selected.amount)}</p>
+          <div className="relative w-full max-w-md bg-[#F8FAFC] dark:bg-[#0F172A] rounded-t-2xl p-6 pb-8 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-[18px] font-bold text-[#0A192F] dark:text-white mb-4">Transaction Details</h3>
+            <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 mb-3">
+              <p className="text-[15px] font-bold text-[#0A192F] dark:text-white">{selected.title}</p>
+              <p className="text-[28px] font-bold text-[#0A192F] dark:text-white">{formatCurrency(selected.amount)}</p>
               <StatusBadge status={selected.status} />
             </div>
-            <div className="bg-white rounded-2xl p-4 space-y-2 text-sm">
-              <p className="font-bold text-gray-500 text-[14px] mb-2">Transaction Details</p>
-              <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Recipient</span><span className="font-medium text-right truncate">{selected.recipient}</span></div>
-              <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Type</span><span className="font-medium">{selected.service_type}</span></div>
-              {selected.reference && <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Reference</span><span className="font-medium text-xs text-right truncate">{selected.reference}</span></div>}
-              <div className="flex justify-between gap-2"><span className="text-gray-500 shrink-0">Date</span><span className="font-medium text-right">{selected.created_at ? new Date(selected.created_at).toLocaleString() : ''}</span></div>
+            <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 space-y-2 text-sm mb-3">
+              <p className="font-bold text-gray-500 dark:text-slate-400 text-[14px] mb-2">Transaction Details</p>
+              <div className="flex justify-between gap-2"><span className="text-gray-500 dark:text-slate-400 shrink-0">Recipient</span><span className="font-medium text-right truncate">{selected.recipient}</span></div>
+              <div className="flex justify-between gap-2"><span className="text-gray-500 dark:text-slate-400 shrink-0">Type</span><span className="font-medium">{selected.service_type}</span></div>
+              {selected.reference && <div className="flex justify-between gap-2"><span className="text-gray-500 dark:text-slate-400 shrink-0">Reference</span><span className="font-medium text-xs text-right truncate">{selected.reference}</span></div>}
+              <div className="flex justify-between gap-2"><span className="text-gray-500 dark:text-slate-400 shrink-0">Date</span><span className="font-medium text-right">{selected.created_at ? new Date(selected.created_at).toLocaleString() : ''}</span></div>
             </div>
-            <button onClick={() => setSelected(null)} className="w-full py-4 mt-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
+            <ApiResponseReceipt apiResponse={selected.api_response} />
+            <button onClick={() => setSelected(null)} className="w-full py-4 mt-1 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
           </div>
         </div>
       )}

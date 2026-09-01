@@ -84,8 +84,8 @@ export default function DataScreen() {
           <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
           </div>
-          <h2 className="text-xl font-bold text-[#0A192F] mb-1">Data Purchase Successful!</h2>
-          <p className="text-gray-500 text-sm mb-2">{success.plan.size} sent to {phone}</p>
+          <h2 className="text-xl font-bold text-[#0A192F] dark:text-white mb-1">Data Purchase Successful!</h2>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mb-2">{success.plan.size} sent to {phone}</p>
           <p className="text-gray-400 text-xs">Ref: {success.reference}</p>
           <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
           <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
@@ -104,8 +104,8 @@ export default function DataScreen() {
           <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
-          <h2 className="text-xl font-bold text-[#0A192F] mb-1">Data Being Processed</h2>
-          <p className="text-gray-500 text-sm mb-2">{pending.plan.size} to {phone} is being delivered.</p>
+          <h2 className="text-xl font-bold text-[#0A192F] dark:text-white mb-1">Data Being Processed</h2>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mb-2">{pending.plan.size} to {phone} is being delivered.</p>
           <p className="text-gray-400 text-xs">Ref: {pending.reference}</p>
           <p className="text-[11px] text-amber-600 mt-3 font-medium">Returning to dashboard...</p>
           <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
@@ -119,16 +119,16 @@ export default function DataScreen() {
       <TopBar title="Data Bundles" onBack />
       <div className="px-5 pt-4 space-y-5">
         {/* Network Provider */}
-        <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-[12px] font-black text-gray-600 tracking-[0.5px] mb-3 uppercase">Select Network Provider</p>
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
+          <p className="text-[12px] font-black text-gray-600 dark:text-slate-400 tracking-[0.5px] mb-3 uppercase">Select Network Provider</p>
           <NetworkSelector selected={network} onSelect={setNetwork} height="h-[90px]" />
         </div>
 
         {/* Plans */}
         {network && (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-gray-100 dark:border-slate-700 overflow-hidden">
             <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center justify-between p-4">
-              <p className="text-[12px] font-black text-gray-600 tracking-[0.5px] uppercase">Select Data Plan</p>
+              <p className="text-[12px] font-black text-gray-600 dark:text-slate-400 tracking-[0.5px] uppercase">Select Data Plan</p>
               {expanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
             </button>
             {expanded && (
@@ -136,7 +136,7 @@ export default function DataScreen() {
                 {loadingPlans ? (
                   <div className="flex items-center justify-center py-6 gap-2">
                     <div className="w-6 h-6 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-                    <span className="text-gray-500 text-sm">Loading plans...</span>
+                    <span className="text-gray-500 dark:text-slate-400 text-sm">Loading plans...</span>
                   </div>
                 ) : plans.length === 0 ? (
                   <p className="text-gray-400 text-sm text-center py-4">No plans available for {network.name}</p>
@@ -146,11 +146,11 @@ export default function DataScreen() {
                       <button
                         key={plan.id || plan.plan_id}
                         onClick={() => handleSelectPlan(plan)}
-                        className={`rounded-xl p-3 text-left border-2 transition-all ${selectedPlan?.id === plan.id ? 'border-[#D4AF37]' : 'border-gray-200'}`}
+                        className={`rounded-xl p-3 text-left border-2 transition-all ${selectedPlan?.id === plan.id ? 'border-[#D4AF37]' : 'border-gray-200 dark:border-slate-700'}`}
                       >
-                        <p className="text-[18px] font-bold text-[#0A192F]">{plan.size || plan.volume}</p>
+                        <p className="text-[18px] font-bold text-[#0A192F] dark:text-white">{plan.size || plan.volume}</p>
                         <p className="text-[15px] font-bold text-[#D4AF37]">{formatCurrency(Number(plan.amount ?? plan.plan_amount ?? plan.retail_price ?? 0))}</p>
-                        <p className="text-[11px] font-bold text-[#0A192F]">{plan.validity}</p>
+                        <p className="text-[11px] font-bold text-[#0A192F] dark:text-white">{plan.validity}</p>
                         <span className="inline-block mt-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-xl bg-[#FEF3C7] text-[#D4AF37]">{plan.plantype || plan.plan_type}</span>
                       </button>
                     ))}
@@ -164,27 +164,27 @@ export default function DataScreen() {
         {/* Summary & Purchase */}
         {selectedPlan && (
           <>
-            <div ref={summaryRef} className="bg-white rounded-xl p-4 border border-gray-100 scroll-mt-16">
+            <div ref={summaryRef} className="bg-white dark:bg-[#1E293B] rounded-xl p-4 border border-gray-100 dark:border-slate-700 scroll-mt-16">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-[#FEF3C7] flex items-center justify-center font-bold text-xs" style={{ backgroundColor: network.color, color: network.textColor }}>{network.name}</div>
                 <div className="flex-1">
-                  <p className="text-[11px] text-gray-500">Network</p>
+                  <p className="text-[11px] text-gray-500 dark:text-slate-400">Network</p>
                   <p className="text-sm font-bold text-[#D4AF37]">{network.name}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-[#FEF3C7] flex items-center justify-center"><Check className="w-5 h-5 text-[#D4AF37]" /></div>
                 <div className="flex-1">
-                  <p className="text-[11px] text-gray-500">Data Plan</p>
+                  <p className="text-[11px] text-gray-500 dark:text-slate-400">Data Plan</p>
                   <p className="text-sm font-bold text-[#D4AF37]">{selectedPlan.size || selectedPlan.volume} — {formatCurrency(planPrice)}</p>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Phone Number</label>
+                <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Phone Number</label>
                 <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full border-2 border-[#D4AF37] rounded-xl px-4 py-3 text-sm focus:outline-none" />
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-gray-500 text-[13px] font-bold">Available Balance</span>
+                <span className="text-gray-500 dark:text-slate-400 text-[13px] font-bold">Available Balance</span>
                 <span className={`text-[15px] font-bold ${balance < planPrice ? 'text-red-500' : 'text-[#D4AF37]'}`}>{formatCurrency(balance)}</span>
               </div>
               {insufficient && (

@@ -39,10 +39,10 @@ export default function EducationScreen() {
       <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
         <TopBar title="Exam Result PINs" onBack={() => setPins(null)} />
         <div className="px-6 pt-6">
-          <h2 className="text-xl font-bold text-[#0A192F] mb-4">Your PINs</h2>
+          <h2 className="text-xl font-bold text-[#0A192F] dark:text-white mb-4">Your PINs</h2>
           <div className="bg-[#F3F4F6] rounded-xl p-4 space-y-2 mb-6">
             {pins.map((pin, i) => (
-              <p key={i} className="text-base font-bold text-[#0A192F]">{typeof pin === 'string' ? pin : pin.pin || JSON.stringify(pin)}</p>
+              <p key={i} className="text-base font-bold text-[#0A192F] dark:text-white">{typeof pin === 'string' ? pin : pin.pin || JSON.stringify(pin)}</p>
             ))}
           </div>
           <button onClick={() => { setPins(null); setSelectedExam(null); }} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
@@ -56,8 +56,8 @@ export default function EducationScreen() {
       <TopBar title="Exam Result PINs" onBack />
       <div className="px-5 pt-4 space-y-5">
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Select Exam Type</label>
-          <select value={selectedExam?.code || ''} onChange={(e) => setSelectedExam(exams.find(x => x.code === e.target.value))} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]">
+          <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Select Exam Type</label>
+          <select value={selectedExam?.code || ''} onChange={(e) => setSelectedExam(exams.find(x => x.code === e.target.value))} className="w-full bg-white dark:bg-[#1E293B] border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]">
             <option value="">Choose exam</option>
             {exams.map((e) => <option key={e.code} value={e.code}>{e.exam || e.name} — {formatCurrency(e.amount)}</option>)}
           </select>
@@ -66,10 +66,10 @@ export default function EducationScreen() {
         {selectedExam && (
           <>
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-2">Select Quantity</p>
+              <p className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-2">Select Quantity</p>
               <div className="flex gap-3">
                 {[1, 2, 5].map((q) => (
-                  <button key={q} onClick={() => setQuantity(q)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${quantity === q ? 'bg-[#0A192F] text-white border-[#0A192F]' : 'bg-white border-gray-300 text-gray-500'}`}>
+                  <button key={q} onClick={() => setQuantity(q)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${quantity === q ? 'bg-[#0A192F] text-white border-[#0A192F]' : 'bg-white dark:bg-[#1E293B] border-gray-300 dark:border-slate-600 text-gray-500 dark:text-slate-400'}`}>
                     {q}
                   </button>
                 ))}
@@ -77,9 +77,9 @@ export default function EducationScreen() {
             </div>
 
             <div className="bg-[#F0F9FF] rounded-xl p-4">
-              <p className="text-sm font-bold text-[#0A192F] mb-1">Order Summary</p>
-              <p className="text-sm text-gray-600">{selectedExam.exam || selectedExam.name} x{quantity}</p>
-              <p className="text-sm font-bold text-[#0A192F]">{formatCurrency((selectedExam.amount || 0) * quantity)}</p>
+              <p className="text-sm font-bold text-[#0A192F] dark:text-white mb-1">Order Summary</p>
+              <p className="text-sm text-gray-600 dark:text-slate-400">{selectedExam.exam || selectedExam.name} x{quantity}</p>
+              <p className="text-sm font-bold text-[#0A192F] dark:text-white">{formatCurrency((selectedExam.amount || 0) * quantity)}</p>
             </div>
 
             {error && <p className="text-red-500 text-xs">{error}</p>}

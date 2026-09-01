@@ -80,8 +80,8 @@ export default function CableScreen() {
               ? <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               : <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
           </div>
-          <h2 className="text-xl font-bold text-[#0A192F] mb-1">{pending ? 'Subscription Being Processed' : 'Cable Subscription Successful!'}</h2>
-          <p className="text-gray-500 text-sm">{pending ? 'Your cable subscription is being delivered.' : `${success.product_name} — ${formatCurrency(success.amount)}`}</p>
+          <h2 className="text-xl font-bold text-[#0A192F] dark:text-white mb-1">{pending ? 'Subscription Being Processed' : 'Cable Subscription Successful!'}</h2>
+          <p className="text-gray-500 dark:text-slate-400 text-sm">{pending ? 'Your cable subscription is being delivered.' : `${success.product_name} — ${formatCurrency(success.amount)}`}</p>
           <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
           <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
         </div>
@@ -93,11 +93,11 @@ export default function CableScreen() {
     <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
       <TopBar title="Cable TV" onBack />
       <div className="px-5 pt-4 space-y-5">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-[12px] font-black text-gray-600 tracking-[0.5px] mb-3 uppercase">Select Provider</p>
+        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
+          <p className="text-[12px] font-black text-gray-600 dark:text-slate-400 tracking-[0.5px] mb-3 uppercase">Select Provider</p>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {PROVIDERS.map((p) => (
-              <button key={p.id} onClick={() => { setProvider(p); setVerifyData(null); setSelectedPlan(null); }} className={`min-w-[90px] h-[90px] rounded-xl border-2 flex flex-col items-center justify-center gap-1 transition-all shrink-0 ${provider?.id === p.id ? 'border-[#D4AF37]' : 'border-gray-200'}`}>
+              <button key={p.id} onClick={() => { setProvider(p); setVerifyData(null); setSelectedPlan(null); }} className={`min-w-[90px] h-[90px] rounded-xl border-2 flex flex-col items-center justify-center gap-1 transition-all shrink-0 ${provider?.id === p.id ? 'border-[#D4AF37]' : 'border-gray-200 dark:border-slate-700'}`}>
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs text-white" style={{ backgroundColor: p.color }}>{p.name.slice(0, 2)}</div>
                 <span className="text-[11px] font-bold">{p.name}</span>
               </button>
@@ -106,11 +106,11 @@ export default function CableScreen() {
         </div>
 
         {provider && (
-          <div className="bg-white rounded-2xl p-4 border border-gray-100">
-            <p className="text-[12px] font-black text-gray-600 tracking-[0.5px] mb-3 uppercase">Smart Card / IUC Number</p>
+          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
+            <p className="text-[12px] font-black text-gray-600 dark:text-slate-400 tracking-[0.5px] mb-3 uppercase">Smart Card / IUC Number</p>
             <div className="flex gap-2">
-              <input type="text" value={cardNo} onChange={(e) => setCardNo(e.target.value)} placeholder="Enter card number" className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0A192F]" />
-              <button onClick={handleVerify} disabled={verifying || !cardNo} className="px-4 py-2 border border-[#0A192F] rounded-xl text-[#0A192F] text-xs font-bold disabled:opacity-50">{verifying ? '...' : 'Verify'}</button>
+              <input type="text" value={cardNo} onChange={(e) => setCardNo(e.target.value)} placeholder="Enter card number" className="flex-1 border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0A192F]" />
+              <button onClick={handleVerify} disabled={verifying || !cardNo} className="px-4 py-2 border border-[#0A192F] rounded-xl text-[#0A192F] dark:text-white text-xs font-bold disabled:opacity-50">{verifying ? '...' : 'Verify'}</button>
             </div>
           </div>
         )}
@@ -118,15 +118,15 @@ export default function CableScreen() {
         {verifyData && (
           <div className="bg-[#ECFDF5] rounded-xl p-4 border border-[#10B981]/20">
             <p className="text-[12px] font-black text-[#065F46] mb-2">Verification Successful</p>
-            <p className="text-sm text-[#0A192F]">Name: <span className="font-bold">{verifyData.customerName}</span></p>
-            <p className="text-sm text-[#0A192F]">Current Plan: <span className="font-bold">{verifyData.currentBouquet}</span></p>
+            <p className="text-sm text-[#0A192F] dark:text-white">Name: <span className="font-bold">{verifyData.customerName}</span></p>
+            <p className="text-sm text-[#0A192F] dark:text-white">Current Plan: <span className="font-bold">{verifyData.currentBouquet}</span></p>
           </div>
         )}
 
         {verifyData && plans.length > 0 && (
-          <div className="bg-white rounded-2xl p-4 border border-gray-100">
-            <label className="text-xs font-medium text-gray-600 mb-1 block">Select Plan</label>
-            <select value={selectedPlan?.id || ''} onChange={(e) => setSelectedPlan(plans.find(p => p.id === e.target.value))} className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0A192F] bg-white">
+          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
+            <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Select Plan</label>
+            <select value={selectedPlan?.id || ''} onChange={(e) => setSelectedPlan(plans.find(p => p.id === e.target.value))} className="w-full border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0A192F] bg-white dark:bg-[#1E293B]">
               <option value="">Choose a plan</option>
               {plans.map((p) => <option key={p.id} value={p.id}>{p.product_name} — {formatCurrency(p.amount)}</option>)}
             </select>
@@ -136,8 +136,8 @@ export default function CableScreen() {
         {selectedPlan && (
           <>
             <div>
-              <label className="text-xs font-medium text-gray-600 mb-1 block">Phone Number</label>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
+              <label className="text-xs font-medium text-gray-600 dark:text-slate-400 mb-1 block">Phone Number</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="08012345678" className="w-full bg-white dark:bg-[#1E293B] border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-[#0A192F]" />
             </div>
             {error && <p className="text-red-500 text-xs">{error}</p>}
             {planPrice > 0 && balance < planPrice && (
