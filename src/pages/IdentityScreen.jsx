@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { CheckCircle, Download } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import API from '../services/api';
+import { useAuth } from '../context/AuthContext';
+
+const FEES = { nin: 200, bvn: 100 };
 
 export default function IdentityScreen() {
+  const { fetchBalance } = useAuth();
   const [idType, setIdType] = useState('nin');
   const [nin, setNin] = useState('');
   const [bvn, setBvn] = useState('');
@@ -28,6 +32,8 @@ export default function IdentityScreen() {
       else setError(res.data?.responseMessage || 'Verification failed');
     } catch (err) { setError(err.response?.data?.responseMessage || 'Verification failed'); }
     setLoading(false);
+    // The edge function debits (or refunds) the user's wallet for the fee.
+    fetchBalance(true);
   };
 
   const fullNameFromResult = () => {
@@ -82,10 +88,11 @@ export default function IdentityScreen() {
       label(y, 'Match Status', d.match === true ? 'Matched' : 'Confirmed'); y += 8;
     } else {
       label(y, 'BVN', d.bvn || bvn); y += 8;
-      label(y, 'Name Match', `${d.name?.matchStatus || 'N/A'}${d.name?.matchPercentage != null ? ` (${d.name.matchPercentage}%)` : ''}`); y += 8;
-      label(y, 'Date of Birth', d.dateOfBirth || 'N/A'); y += 8;
-      label(y, 'Mobile Number', d.mobileNo || 'N/A'); y += 8;
+      label(y, 'Name', `${fullName} — ${d.name?.matchStatus || 'N/A'}${d.name?.matchPercentage != null ? ` (${d.name.matchPercentage}%)` : ''}`); y += 8;
+      label(y, 'Date of Birth', `${dob} — ${d.dateOfBirth || 'N/A'}`); y += 8;
+      label(y, 'Mobile Number', `${phone} — ${d.mobileNo || 'N/A'}`); y += 8;
     }
+    label(y, 'Fee Charged', `₦${result?.fee_charged ?? FEES[idType]}`); y += 8;
 
     pdf.setFontSize(8);
     pdf.setTextColor(130);
@@ -153,9 +160,9 @@ export default function IdentityScreen() {
             ) : (
               <div className="space-y-1 text-sm">
                 <p>BVN: <span className="font-bold">{result.data?.bvn || bvn}</span></p>
-                <p>Name: <span className="font-bold">{result.data?.name?.matchStatus || 'N/A'}{result.data?.name?.matchPercentage != null ? ` (${result.data.name.matchPercentage}%)` : ''}</span></p>
-                <p>Date of Birth: <span className="font-bold">{result.data?.dateOfBirth || 'N/A'}</span></p>
-                <p>Mobile: <span className="font-bold">{result.data?.mobileNo || 'N/A'}</span></p>
+                <p>Name: <span className="font-bold">{fullName}</span> — <span className="font-bold">{result.data?.name?.matchStatus || 'N/A'}{result.data?.name?.matchPercentage != null ? ` (${result.data.name.matchPercentage}%)` : ''}</span></p>
+                <p>Date of Birth: <span className="font-bold">{dob}</span> — <span className="font-bold">{result.data?.dateOfBirth || 'N/A'}</span></p>
+                <p>Mobile: <span className="font-bold">{phone}</span> — <span className="font-bold">{result.data?.mobileNo || 'N/A'}</span></p>
               </div>
             )}
             <button
@@ -169,7 +176,7 @@ export default function IdentityScreen() {
 
         {error && <p className="text-red-500 text-xs">{error}</p>}
 
-        <p className="text-gray-400 text-[11px]">Verification fee may apply.</p>
+        <p className="text-gray-400 text-[11px]">Cost: ₦{FEES[idType]} — debited from your wallet only on a successful verification.</p>
 
         <button onClick={handleVerify} disabled={loading || (idType === 'nin' ? nin.length < 11 : bvn.length < 11 || !fullName || !dob || phone.length < 11)} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
           {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'Verify Identity'}
