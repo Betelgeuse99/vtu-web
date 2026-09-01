@@ -12,7 +12,7 @@ export default function EducationScreen() {
   const [pins, setPins] = useState(null);
 
   useEffect(() => {
-    API.get('/api/v2/bills/result-checker/prices')
+    API.get('/vtu/bills/result-checker/prices')
       .then((res) => setExams(res.data.data || []))
       .catch(() => {});
   }, []);
@@ -22,10 +22,13 @@ export default function EducationScreen() {
     setLoading(true);
     setError('');
     try {
-      const res = await API.post('/api/v2/bills/result-checker/purchase', {
+      const res = await API.post('/vtu/bills/result-checker/purchase', {
         exam: selectedExam.code || selectedExam.id, quantity
       });
-      if (res.data.success) setPins(res.data.pins || []);
+      if (res.data.success) {
+        if (res.data.status === 'pending') setError('Your exam PINs are being processed. They will deliver shortly.');
+        else setPins(res.data.pins || []);
+      }
       else setError(res.data.message || 'Purchase failed');
     } catch (err) { setError(err.response?.data?.message || 'Purchase failed'); }
     setLoading(false);

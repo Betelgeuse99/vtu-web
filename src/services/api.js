@@ -1,8 +1,13 @@
 import axios from 'axios';
 import { getSession, setSession, clearAuth } from '../utils/storage';
 
+// Render is decommissioned — everything now runs on Supabase Edge Functions
+// (same base URL the Android app uses). Configurable via VITE_BACKEND_URL only
+// for local overrides; the default is the live Supabase project.
+const SUPABASE_FUNCTIONS_URL = 'https://lraryzkamshicildghdv.supabase.co/functions/v1';
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || 'https://dreamhatcher-paystack-backend.onrender.com',
+  baseURL: import.meta.env.VITE_BACKEND_URL || SUPABASE_FUNCTIONS_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 35000,
 });

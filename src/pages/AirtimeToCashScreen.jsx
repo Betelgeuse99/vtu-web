@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Copy } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import NetworkSelector from '../components/NetworkSelector';
-import API from '../services/api';
 import { formatCurrency } from '../utils/helpers';
 
 const PAYOUT_RATES = { mtn: 80, airtel: 80, glo: 80, '9mobile': 80 };
@@ -11,35 +10,29 @@ export default function AirtimeToCashScreen() {
   const [network, setNetwork] = useState(null);
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [result, setResult] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const isMismatch = network && phone.length >= 4 && !['0803','0806','0816','0903','0906','0703','0706'].includes(phone.slice(0,4)) && network.slug === 'mtn';
 
   const payout = network && amount ? Math.floor(Number(amount) * (PAYOUT_RATES[network.slug] || 80) / 100) : 0;
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!network || !phone || !amount) return;
-    setLoading(true);
-    setError('');
-    try {
-      const res = await API.post('/airtime/convert', { network: network.slug, phoneNumber: phone, amount: Number(amount) });
-      if (res.data.success) setResult(res.data);
-      else setError(res.data.message || 'Conversion failed');
-    } catch (err) { setError(err.response?.data?.message || 'Conversion failed'); }
-    setLoading(false);
+    setSubmitted(true);
   };
 
-  if (result) {
+  if (submitted) {
     return (
       <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
-        <TopBar title="Airtime to Cash" onBack={() => setResult(null)} />
+        <TopBar title="Airtime to Cash" onBack={() => setSubmitted(false)} />
         <div className="px-6 pt-10 text-center">
-          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4"><svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
-          <h2 className="text-xl font-bold text-[#0A192F] mb-2">Conversion Submitted!</h2>
-          <p className="text-gray-500 text-sm mb-6">{result.message || 'Your airtime conversion is being processed.'}</p>
-          <button onClick={() => { setResult(null); setAmount(''); setPhone(''); }} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
+          <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h2 className="text-xl font-bold text-[#0A192F] mb-1">Transfer Request Noted</h2>
+          <p className="text-gray-500 text-sm mb-2">{formatCurrency(amount)} airtime from {phone} will be credited to your wallet after confirmation.</p>
+          <p className="text-gray-400 text-xs mb-6">If your wallet isn't credited within 30 minutes, contact support.</p>
+          <button onClick={() => { setSubmitted(false); setAmount(''); setPhone(''); }} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
         </div>
       </div>
     );
@@ -85,10 +78,8 @@ export default function AirtimeToCashScreen() {
           </p>
         </div>
 
-        {error && <p className="text-red-500 text-xs">{error}</p>}
-
-        <button onClick={handleSubmit} disabled={loading || !network || !phone || !amount} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
-          {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'I Have Transferred Airtime'}
+        <button onClick={handleSubmit} disabled={!network || !phone || !amount || Number(amount) < 100} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+          I Have Transferred Airtime
         </button>
       </div>
     </div>

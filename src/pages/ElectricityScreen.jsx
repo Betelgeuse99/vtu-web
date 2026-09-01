@@ -24,7 +24,7 @@ export default function ElectricityScreen() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    API.get('/api/v2/bills/electricity/providers')
+    API.get('/vtu/bills/electricity/providers')
       .then((res) => setDiscos(res.data.data || []))
       .catch(() => {});
   }, []);
@@ -33,7 +33,7 @@ export default function ElectricityScreen() {
     if (!selectedDisco || !meterNo) return;
     setVerifying(true);
     try {
-      const res = await API.post('/api/v2/bills/electricity/verify', { company: selectedDisco.code, meter_no: meterNo, meter_type: meterType });
+      const res = await API.post('/vtu/bills/electricity/verify', { company: selectedDisco.code, meter_no: meterNo, meter_type: meterType });
       if (res.data.success) setVerifyData(res.data.data);
       else setError(res.data.message || 'Verification failed');
     } catch (err) { setError(err.response?.data?.message || 'Verification failed'); }
@@ -45,12 +45,13 @@ export default function ElectricityScreen() {
     setLoading(true);
     setError('');
     try {
-      const res = await API.post('/api/v2/bills/electricity/pay', {
+      const res = await API.post('/vtu/bills/electricity/pay', {
         company: selectedDisco.code, meter_no: meterNo, meter_type: meterType, phone_number: phone, amount: Number(amount), Customer_name: verifyData.customerName
       });
       if (res.data.success) {
         if (res.data.token) setToken(res.data.token);
-        setSuccess(true);
+        if (res.data.status === 'pending') setError('Your electricity payment is being processed. It will deliver shortly.');
+        else setSuccess(true);
         if (res.data.balance !== undefined) { localStorage.setItem('vtu_wallet', JSON.stringify({ balance: res.data.balance })); }
         fetchBalance(true);
       } else {

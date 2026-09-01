@@ -16,7 +16,7 @@ export default function RechargePinScreen() {
 
   useEffect(() => {
     if (network) {
-      API.get(`/api/v2/vtu/recharge-pin/plans?network=${network.slug}`)
+      API.get(`/vtu/recharge-pin/plans?network=${network.slug}`)
         .then((res) => setPlans(res.data.data || []))
         .catch(() => setPlans([]));
     }
@@ -27,10 +27,13 @@ export default function RechargePinScreen() {
     setLoading(true);
     setError('');
     try {
-      const res = await API.post('/api/v2/vtu/recharge-pin/purchase', {
+      const res = await API.post('/vtu/recharge-pin/purchase', {
         network: network.slug, plan: selectedPlan.id, quantity, name_on_card: cardName || undefined
       });
-      if (res.data.success) setPins(res.data.data);
+      if (res.data.success) {
+        if (res.data.status === 'pending') setError('Your recharge PINs are being processed. They will deliver shortly.');
+        else setPins(res.data.data);
+      }
       else setError(res.data.message || 'Purchase failed');
     } catch (err) { setError(err.response?.data?.message || 'Purchase failed'); }
     setLoading(false);

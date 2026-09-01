@@ -26,10 +26,11 @@ export default function CableScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
+  const [pending, setPending] = useState(null);
 
   useEffect(() => {
     if (provider) {
-      API.get(`/api/v2/vtu/cable/plans?cable_name=${provider.id}`)
+      API.get(`/vtu/cable/plans?cable_name=${provider.id}`)
         .then((res) => setPlans(Array.isArray(res.data.data) ? res.data.data : []))
         .catch(() => setPlans([]));
     }
@@ -39,7 +40,7 @@ export default function CableScreen() {
     if (!cardNo || !provider) return;
     setVerifying(true);
     try {
-      const res = await API.post('/api/v2/vtu/cable/verify', { cable_name: provider.id, card_no: cardNo });
+      const res = await API.post('/vtu/cable/verify', { cable_name: provider.id, card_no: cardNo });
       if (res.data.success) setVerifyData(res.data.data);
       else setError(res.data.message || 'Verification failed');
     } catch (err) { setError(err.response?.data?.message || 'Verification failed'); }
@@ -54,25 +55,33 @@ export default function CableScreen() {
     setLoading(true);
     setError('');
     try {
-      const res = await API.post('/api/v2/vtu/cable/purchase', {
+      const res = await API.post('/vtu/cable/purchase', {
         cable_type: provider.id, card_no: cardNo, phone_number: phone, amount: planPrice, Customer: verifyData?.customerName || ''
       });
-      if (res.data.success) { setSuccess(selectedPlan); if (res.data.balance !== undefined) { localStorage.setItem('vtu_wallet', JSON.stringify({ balance: res.data.balance })); } fetchBalance(true); }
+      if (res.data.success) {
+        if (res.data.status === 'pending') setPending(selectedPlan);
+        else setSuccess(selectedPlan);
+        if (res.data.balance !== undefined) { localStorage.setItem('vtu_wallet', JSON.stringify({ balance: res.data.balance })); } fetchBalance(true);
+      }
       else setError(res.data.message || 'Purchase failed');
     } catch (err) { setError(err.response?.data?.message || 'Purchase failed'); }
     setLoading(false);
   };
 
-  if (success) {
-    // Auto-return to dashboard after a successful purchase
+  if (success || pending) {
+    // Auto-return to dashboard after the purchase is submitted
     setTimeout(() => navigate('/dashboard'), 2500);
     return (
       <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
-        <TopBar title="Cable TV" onBack={() => setSuccess(null)} />
+        <TopBar title="Cable TV" onBack={() => { setSuccess(null); setPending(null); }} />
         <div className="px-6 pt-10 text-center">
-          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4"><svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></div>
-          <h2 className="text-xl font-bold text-[#0A192F] mb-1">Cable Subscription Successful!</h2>
-          <p className="text-gray-500 text-sm">{success.product_name} — {formatCurrency(success.amount)}</p>
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${pending ? 'bg-amber-100' : 'bg-emerald-100'}`}>
+            {pending
+              ? <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              : <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
+          </div>
+          <h2 className="text-xl font-bold text-[#0A192F] mb-1">{pending ? 'Subscription Being Processed' : 'Cable Subscription Successful!'}</h2>
+          <p className="text-gray-500 text-sm">{pending ? 'Your cable subscription is being delivered.' : `${success.product_name} — ${formatCurrency(success.amount)}`}</p>
           <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
           <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
         </div>

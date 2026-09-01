@@ -17,13 +17,22 @@ export default function IdentityScreen() {
   const handleVerify = async () => {
     setLoading(true);
     setError('');
+    setResult(null);
     try {
-      const idNumber = idType === 'nin' ? nin : bvn;
-      const res = await API.post('/verify/identity', { identityNumber: idNumber, type: idType });
-      if (res.data.success) setResult(res.data);
-      else setError(res.data.message || 'Verification failed');
-    } catch (err) { setError(err.response?.data?.message || 'Verification failed'); }
+      const type = idType === 'nin' ? 'NIN' : 'BVN';
+      const payload = type === 'NIN'
+        ? { type, nin }
+        : { type, bvn, name: fullName, dateOfBirth: dob, mobileNo: phone };
+      const res = await API.post('/monnify-verify', payload);
+      if (res.data?.requestSuccessful === true) setResult(res.data);
+      else setError(res.data?.responseMessage || 'Verification failed');
+    } catch (err) { setError(err.response?.data?.responseMessage || 'Verification failed'); }
     setLoading(false);
+  };
+
+  const fullNameFromResult = () => {
+    const d = result?.data || {};
+    return d.fullName || [d.firstName, d.middleName, d.lastName].filter(Boolean).join(' ').trim();
   };
 
   return (
@@ -34,7 +43,7 @@ export default function IdentityScreen() {
 
         <div className="flex gap-3">
           {['nin', 'bvn'].map((t) => (
-            <button key={t} onClick={() => { setIdType(t); setResult(null); }} className={`flex-1 py-2.5 rounded-full border text-sm font-bold transition-all ${idType === t ? 'bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] border-[#0A192F]' : 'bg-white border-gray-300 text-gray-500'}`}>
+            <button key={t} onClick={() => { setIdType(t); setResult(null); setError(''); }} className={`flex-1 py-2.5 rounded-full border text-sm font-bold transition-all ${idType === t ? 'bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] border-[#0A192F]' : 'bg-white border-gray-300 text-gray-500'}`}>
               {t.toUpperCase()}
             </button>
           ))}
@@ -72,13 +81,15 @@ export default function IdentityScreen() {
               <CheckCircle className="w-5 h-5 text-[#059669]" />
               <p className="text-sm font-bold text-[#065F46]">Verification Result</p>
             </div>
-            {result.data && (
-              <div className="space-y-1 text-sm">
-                <p>Name: <span className="font-bold">{result.data.fullName || result.data.full_name}</span></p>
-                {result.data.gender && <p>Gender: <span className="font-bold">{result.data.gender}</span></p>}
-                {result.data.dateOfBirth && <p>DOB: <span className="font-bold">{result.data.dateOfBirth}</span></p>}
-              </div>
-            )}
+            <div className="space-y-1 text-sm">
+              <p>Name: <span className="font-bold">{fullNameFromResult() || 'Verified'}</span></p>
+              {result.data?.phoneNumber && <p>Phone: <span className="font-bold">{result.data.phoneNumber}</span></p>}
+              {result.data?.gender && <p>Gender: <span className="font-bold">{result.data.gender}</span></p>}
+              {result.data?.dateOfBirth && <p>DOB: <span className="font-bold">{result.data.dateOfBirth}</span></p>}
+              {idType === 'nin' && (
+                <p>NIN Match: <span className="font-bold">{result.data?.match === true ? 'Matched' : 'Confirmed'}</span></p>
+              )}
+            </div>
           </div>
         )}
 
@@ -86,7 +97,7 @@ export default function IdentityScreen() {
 
         <p className="text-gray-400 text-[11px]">Verification fee may apply.</p>
 
-        <button onClick={handleVerify} disabled={loading || (idType === 'nin' ? nin.length < 11 : bvn.length < 11)} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
+        <button onClick={handleVerify} disabled={loading || (idType === 'nin' ? nin.length < 11 : bvn.length < 11 || !fullName || !dob || phone.length < 11)} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl text-base font-bold disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center">
           {loading ? <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /> : 'Verify Identity'}
         </button>
       </div>

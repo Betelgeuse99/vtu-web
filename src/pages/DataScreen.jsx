@@ -19,13 +19,14 @@ export default function DataScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
+  const [pending, setPending] = useState(null);
   const summaryRef = useRef(null);
 
   useEffect(() => {
     if (network) {
       setLoadingPlans(true);
       setSelectedPlan(null);
-      API.get(`/api/v2/vtu/data/plans?network=${network.id}`)
+      API.get(`/vtu/data/plans?network=${network.id}`)
         .then((res) => setPlans(res.data.data || []))
         .catch(() => setPlans([]))
         .finally(() => setLoadingPlans(false));
@@ -50,11 +51,15 @@ export default function DataScreen() {
     setLoading(true);
     setError('');
     try {
-      const res = await API.post('/api/v2/vtu/data/purchase', {
+      const res = await API.post('/vtu/data/purchase', {
         network: network.slug, plan: selectedPlan.plan_id || selectedPlan.id, phone_number: phone, amount: planPrice
       });
       if (res.data.success) {
-        setSuccess({ plan: selectedPlan, reference: res.data.reference });
+        if (res.data.status === 'pending') {
+          setPending({ plan: selectedPlan, reference: res.data.reference, message: res.data.message });
+        } else {
+          setSuccess({ plan: selectedPlan, reference: res.data.reference });
+        }
         if (res.data.balance !== undefined) {
           const wb = { balance: res.data.balance };
           localStorage.setItem('vtu_wallet', JSON.stringify(wb));
@@ -83,6 +88,26 @@ export default function DataScreen() {
           <p className="text-gray-500 text-sm mb-2">{success.plan.size} sent to {phone}</p>
           <p className="text-gray-400 text-xs">Ref: {success.reference}</p>
           <p className="text-[11px] text-emerald-600 mt-3 font-medium">Returning to dashboard...</p>
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (pending) {
+    // Auto-return to dashboard after a pending (in-progress) purchase
+    setTimeout(() => navigate('/dashboard'), 2500);
+    return (
+      <div className="min-h-screen bg-[#F4F6F9] dark:bg-[#0A192F]">
+        <TopBar title="Data Bundles" onBack={() => setPending(null)} />
+        <div className="px-6 pt-10 text-center">
+          <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h2 className="text-xl font-bold text-[#0A192F] mb-1">Data Being Processed</h2>
+          <p className="text-gray-500 text-sm mb-2">{pending.plan.size} to {phone} is being delivered.</p>
+          <p className="text-gray-400 text-xs">Ref: {pending.reference}</p>
+          <p className="text-[11px] text-amber-600 mt-3 font-medium">Returning to dashboard...</p>
           <button onClick={() => navigate('/dashboard')} className="w-full py-4 mt-8 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Go to Dashboard</button>
         </div>
       </div>
