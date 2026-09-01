@@ -24,7 +24,7 @@ async function supabaseGet(table, query) {
   return res.json();
 }
 
-async function supabaseInsert(table, body) {
+export async function supabaseInsert(table, body) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: 'POST',
     headers: { ...authHeaders(), 'Prefer': 'return=representation' },
