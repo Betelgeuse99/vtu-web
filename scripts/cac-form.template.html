@@ -18,7 +18,7 @@
   body{background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
   .wrap{max-width:760px; margin:0 auto; padding:14px 12px 90px}
   .hero{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; display:flex; gap:12px; align-items:center; margin-bottom:14px}
-  .hero .logo{width:42px; height:42px; border-radius:12px; background:var(--acc); color:var(--acc2); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; flex:none}
+  .hero .logo{width:52px; height:52px; border-radius:12px; flex:none; object-fit:contain; background:#fff; padding:3px; border:1px solid var(--line)}
   .hero h1{margin:0; font-size:15px}
   .hero p{margin:2px 0 0; color:var(--mut); font-size:11px; line-height:1.4}
   .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px}
@@ -52,12 +52,17 @@
   .spin{display:inline-block; width:16px; height:16px; border:2px solid var(--acc2); border-top-color:transparent; border-radius:50%; animation:sp .8s linear infinite; vertical-align:-2px}
   @keyframes sp{to{transform:rotate(360deg)}}
   .endbar{position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--line); padding:10px 12px; max-width:760px; margin:0 auto}
+  .overlay{position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg); z-index:40; overflow-y:auto; padding:16px 12px 96px}
+  .rr{display:flex; justify-content:space-between; gap:14px; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px}
+  .rr span{color:var(--mut); flex:none}
+  .rr b{text-align:right; word-break:break-word}
+  .rsec{margin:16px 0 4px; font-size:12px; font-weight:800; color:var(--acc); text-transform:uppercase; letter-spacing:.4px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hero">
-    <div class="logo">DH</div>
+    <img class="logo" src="cac-logo.png" alt="CAC">
     <div>
       <h1>CAC Registration</h1>
       <p>Business Name &bull; Private Ltd (LTD) &bull; Public Ltd (PLC) &bull; Ltd/Gte &bull; Unlimited &bull; Incorporated Trustees</p>
@@ -250,8 +255,31 @@
   <div id="actions" class="hidden" style="height:8px"></div>
 </div>
 
+<!-- ============ REVIEW OVERLAY ============ -->
+<div id="reviewView" class="overlay hidden">
+  <h2 style="margin:0 0 10px">Review &amp; Confirm Application</h2>
+  <div class="errbar hidden" id="reviewErr"></div>
+  <div id="reviewBody" style="background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px"></div>
+  <div style="position:fixed; left:12px; right:12px; bottom:12px; max-width:736px; margin:0 auto">
+    <div style="display:flex; gap:10px">
+      <button type="button" class="btn btn-s" id="editBtn" style="flex:1">Edit</button>
+      <button type="button" class="btn btn-p" id="confirmBtn" style="flex:2">Submit Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DONE OVERLAY ============ -->
+<div id="doneView" class="overlay hidden">
+  <div style="max-width:460px; margin:20vh auto 0; text-align:center">
+    <div style="width:76px;height:76px;border-radius:50%;background:#DCFCE7;display:inline-flex;align-items:center;justify-content:center;color:#16A34A;font-size:40px;font-weight:800">&#10003;</div>
+    <h2 style="margin:14px 0 6px">Submitted successfully!</h2>
+    <p style="color:var(--mut); font-size:14px">Your CAC registration has been received. We will contact you about the next steps.</p>
+    <button type="button" class="btn btn-p" id="doneBtn" style="margin-top:20px">Back to Dashboard</button>
+  </div>
+</div>
+
 <div class="endbar hidden" id="endbar">
-  <button type="button" class="btn btn-p" id="submitBtn"><span id="submitTxt">Preview &amp; Submit</span></button>
+  <button type="button" class="btn btn-p" id="submitBtn">Review &amp; Submit</button>
   <button type="button" class="btn btn-s" id="pdfBtn">Download PDF of this application</button>
 </div>
 
@@ -572,39 +600,117 @@ function collectPayload(){
 }
 
 /* ---------- bridge ---------- */
-function setBusy(on){
-  var btn=$('submitBtn'); btn.disabled=on;
-  $('submitTxt').innerHTML = on ? '<span class="spin"></span> Submitting...' : 'Preview &amp; Submit';
-}
+var sending=false;
 function showResult(ok, msg){
   var box=$('result');
   box.innerHTML = ok ? '<div class="okbar">&#10003; '+esc(msg||'Submitted!')+'</div>'
                      : '<div class="errbar">'+esc(msg||'Submission failed. Please try again.')+'</div>';
   if(ok){ window.scrollTo({top:0,behavior:'smooth'}); }
 }
-function submit(){
+function collectSafe(){
   var payload=collectPayload();
   if(!payload.proposed_name || !payload.email || !payload.phone){
-    showResult(false,'Please complete the Company Name, Email and Phone Number.');
-    return;
+    throw new Error('Please complete the Company Name / Business Name, Email and Phone Number.');
   }
-  setBusy(true);
-  if(isAndroid()){
-    Android.submitCac(JSON.stringify(payload));
-  } else if(window.parent && window.parent!==window){
-    window.parent.postMessage({type:'cac-submit',payload:payload}, '*');
+  return payload;
+}
+
+/* ---------- review rendering ---------- */
+var TYPE_SHORT = { business_name:'Business Name', private_company:'Private Ltd (LTD)', public_company:'Public Ltd (PLC)', guarantee_company:'Company Ltd by Guarantee', unlimited_company:'Unlimited Company', incorporated_trustees:'Incorporated Trustees' };
+function revRow(k, v){
+  var val = v === null || v === undefined || v === '' ? '\u2014' : String(v);
+  return '<div class="rr"><span>'+esc(k)+'</span><b>'+esc(val)+'</b></div>';
+}
+function revSec(title, html){ return '<div class="rsec">'+esc(title)+'</div>' + (html || ''); }
+function personLine(p){
+  if(!p) return '';
+  var name=[p.surname,p.firstName,p.otherName].filter(function(x){return x && String(x).trim()!=='';}).join(' ').trim();
+  var bits=[name,p.idType?('ID: '+p.idType):'',p.nin?('NIN: '+p.nin):'',p.allotted?('Allotted: '+p.allotted):''].filter(Boolean);
+  return bits.join(' \u2014 ');
+}
+function peopleRows(arr){
+  if(!arr) return '';
+  var out='';
+  arr.forEach(function(p,i){ if(p && (p.surname||p.firstName)) out+=revRow((i+1)+'. Person', personLine(p)); });
+  return out;
+}
+function renderReview(payload){
+  var h='';
+  h+=revSec('Registration', revRow('Type', TYPE_SHORT[payload.registration_type]||payload.registration_type) +
+       revRow('Name', payload.proposed_name) + (payload.alt_name?revRow('Alternative Name', payload.alt_name):'') +
+       revRow('Email', payload.email) + revRow('Phone', payload.phone));
+  h+=revSec('Business Activity', revRow('Nature of Business', payload.nature_of_business) +
+       (payload.additional && payload.additional.principalActivity?revRow('Principal Activity', payload.additional.principalActivity):'') +
+       (payload.additional && payload.additional.specificActivity?revRow('Specific Activity', payload.additional.specificActivity):'') +
+       (payload.business_type?revRow('Business Type', payload.business_type):'') +
+       ((payload.additional && payload.additional.propCommencement)?revRow('Commencement', payload.additional.propCommencement):''));
+  h+=revSec('Address', revRow('Registered Address', payload.registered_address) +
+       (payload.head_office_address && payload.head_office_address!==payload.registered_address?revRow('Head Office', payload.head_office_address):''));
+  var persons = [['Proprietor', payload.proprietor && payload.proprietor.surname ? [payload.proprietor] : []], ['Directors', payload.directors || []], ['Shareholders / Members', payload.shareholders || []], ['PSC', payload.pscs || []], ['Trustees', payload.trustees || []], ['Witnesses', (payload.additional && payload.additional.witnesses) || []]];
+  persons.forEach(function(pair){
+    var filled=(pair[1]||[]).filter(function(x){return x && (x.surname||x.firstName);});
+    if(filled.length) h+=revSec(pair[0], peopleRows(filled));
+  });
+  if(payload.secretary && (payload.secretary.surname||payload.secretary.firstName)) h+=revSec('Secretary', personLine(payload.secretary));
+  if(payload.shares && (payload.shares.authCapital||payload.shares.capitalWords)) h+=revSec('Share Capital', revRow('Total Issued (\u20a6)', payload.shares.authCapital) +
+       revRow('In Words', payload.shares.capitalWords) + revRow('Class', payload.shares.shareClass));
+  if(payload.guarantee && payload.guarantee.amount) h+=revSec('Guarantee', revRow('Amount (\u20a6)', payload.guarantee.amount) + revRow('Purpose', payload.guarantee.purpose));
+  if(payload.additional && payload.additional.objects){ var objs=(payload.additional.objects||[]).filter(function(x){return String(x||'').trim()!=='';});
+    if(objs.length) h+=revSec('Objects of Memorandum', objs.map(function(o,i){return revRow('Object '+(i+1), o);}).join('')); }
+  if(payload.compliance && (payload.compliance.surname||payload.compliance.firstName)) h+=revSec('Compliance', personLine(payload.compliance));
+  $('reviewBody').innerHTML = h;
+}
+
+/* ---------- step control ---------- */
+function openReview(){
+  var payload;
+  try { payload = collectSafe(); } catch(e){ showResult(false, e.message); return; }
+  $('reviewErr').classList.add('hidden');
+  renderReview(payload);
+  $('reviewView').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+function closeReview(){ $('reviewView').classList.add('hidden'); }
+function sendToPlatform(payload){
+  if(isAndroid()){ Android.submitCac(JSON.stringify(payload)); return true; }
+  if(window.parent && window.parent!==window){ window.parent.postMessage({type:'cac-submit',payload:payload}, '*'); return true; }
+  return false;
+}
+function confirmSubmit(){
+  if(sending) return;
+  var payload;
+  try { payload = collectSafe(); } catch(e){ showResult(false, e.message); return; }
+  sending=true;
+  var btn=$('confirmBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Submitting...';
+  if(!sendToPlatform(payload)){
+    sending=false; btn.disabled=false; btn.innerHTML='Submit Application';
+    showResult(false,'Submission channel unavailable.');
+  }
+}
+function goHome(){
+  if(isAndroid()){ try{ if(Android && Android.close) Android.close(); }catch(e){} return; }
+  if(window.parent && window.parent!==window){ window.parent.postMessage({type:'cac-done'}, '*'); }
+}
+window.__cacResult = function(ok, msg){
+  var btn=$('confirmBtn');
+  if(sending && btn){ sending=false; btn.disabled=false; btn.innerHTML='Submit Application'; }
+  if(ok){
+    $('reviewView').classList.add('hidden');
+    $('doneView').classList.remove('hidden');
+    window.scrollTo(0,0);
+    setTimeout(goHome, 1800);
   } else {
-    setBusy(false); showResult(false,'Submission channel unavailable.');
+    var el=$('reviewErr'); if(el){ el.textContent = msg || 'Submission failed. Please try again.'; el.classList.remove('hidden'); }
+    showResult(false, msg || 'Submission failed. Please try again.');
   }
-}
+};
 function requestPdf(){
-  var payload=collectPayload();
+  var payload;
+  try { payload = collectSafe(); } catch(e){ showResult(false, e.message); return; }
   if(isAndroid()){ Android.log && Android.log('pdf not available'); return; }
-  if(window.parent && window.parent!==window){
-    window.parent.postMessage({type:'cac-pdf',payload:payload}, '*');
-  } else { showResult(false,'PDF channel unavailable.'); }
+  if(window.parent && window.parent!==window){ window.parent.postMessage({type:'cac-pdf',payload:payload}, '*'); }
+  else { showResult(false,'PDF channel unavailable.'); }
 }
-window.__cacResult = function(ok,msg){ setBusy(false); showResult(ok,msg); };
 
 /* ---------- init ---------- */
 document.addEventListener('DOMContentLoaded', function(){
@@ -636,7 +742,10 @@ document.addEventListener('DOMContentLoaded', function(){
   $('addPsc').addEventListener('click',function(){ addPerson($('pscs'),'pscs','PSC '+($('pscs').children.length+1)); });
   $('addTrustee').addEventListener('click',function(){ addPerson($('trustees'),'trustees','Trustee '+($('trustees').children.length+1)); });
   $('addShareRow').addEventListener('click',function(){ addShareRow($('shareRows')); });
-  $('submitBtn').addEventListener('click', submit);
+  $('submitBtn').addEventListener('click', openReview);
+  $('editBtn').addEventListener('click', closeReview);
+  $('confirmBtn').addEventListener('click', confirmSubmit);
+  $('doneBtn').addEventListener('click', goHome);
   $('pdfBtn').addEventListener('click', requestPdf);
 
   if(isAndroid()){ $('pdfBtn').classList.add('hidden'); }

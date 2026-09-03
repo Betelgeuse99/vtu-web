@@ -25,6 +25,7 @@ export default function CacRegistrationScreen() {
   useEffect(() => {
     const onMessage = async (e) => {
       const d = e.data || {};
+      if (d.type === 'cac-done') { navigate('/dashboard'); return; }
       if (d.type !== 'cac-submit' && d.type !== 'cac-pdf') return;
       const source = e.source;
       const reply = (ok, message) => {
