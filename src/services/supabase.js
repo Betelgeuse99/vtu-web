@@ -11,11 +11,24 @@ export const SQUAD_SCRIPT_URL = 'https://checkout.squadco.com/widget/squad.min.j
 
 function authHeaders() {
   const session = getSession();
-  return {
-    'Authorization': `Bearer ${session?.access_token || ''}`,
+  const headers = {
     'apikey': SUPABASE_ANON_KEY,
     'Content-Type': 'application/json',
   };
+  // Only send Authorization when a session token exists. PostgREST rejects an
+  // empty "Bearer " header with 401 (PGRST301), which silently broke anonymous
+  // inserts into RLS-protected tables.
+  if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+  return headers;
+}
+
+async function errorText(res) {
+  try {
+    const body = await res.json();
+    return body?.message || body?.error || `HTTP ${res.status}`;
+  } catch (_) {
+    return `HTTP ${res.status}`;
+  }
 }
 
 async function supabaseGet(table, query) {
@@ -30,7 +43,7 @@ export async function supabaseInsert(table, body) {
     headers: { ...authHeaders(), 'Prefer': 'return=representation' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Supabase ${table} insert failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Supabase ${table} insert failed: ${await errorText(res)}`);
   return res.json();
 }
 

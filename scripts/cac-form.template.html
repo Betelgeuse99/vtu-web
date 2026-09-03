@@ -543,7 +543,6 @@ function collectPayload(){
     email:$('email').value.trim(), phone:$('phone').value.trim(),
     registered_address:flatten(reg), head_office_address:flatten(head),
     business_type:$('businessType')?$('businessType').value:'',
-    prop_commencement:$('propCommencement')?$('propCommencement').value:'',
     nature_of_business: isCompany(t) ? ($('description').value.trim()||$('specificActivity').value) : $('natureOfBusiness').value.trim() };
 
   var secretary=readTopPerson($('secretary'),'secretary');
@@ -565,6 +564,7 @@ function collectPayload(){
   document.querySelectorAll('.obj').forEach(function(o){ objects.push(o.value.trim()); });
   var witnesses=readList($('witnesses'));
   p.additional={ restrictionReason:$('restrictionReason').value.trim(),
+    propCommencement:$('propCommencement')?$('propCommencement').value:'',
     principalActivity:$('principalActivity')?$('principalActivity').value:'',
     specificActivity:$('specificActivity')?$('specificActivity').value:'',
     objects:objects, witnesses:witnesses };

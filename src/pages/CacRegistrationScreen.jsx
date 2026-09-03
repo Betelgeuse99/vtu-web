@@ -37,20 +37,30 @@ export default function CacRegistrationScreen() {
       }
 
       const payload = { ...d.payload, user_id: userIdRef.current };
+      let errorMsg = null;
+      let savedLocally = false;
       try {
         const { supabaseInsert } = await import('../services/supabase');
         await supabaseInsert('cac_submissions', payload);
-        reply(true, 'Registration submitted successfully.');
       } catch (err) {
-        // Offline / fallback so a user is never left thinking they failed.
-        try {
-          const key = 'cac_submissions';
-          const existing = JSON.parse(localStorage.getItem(key) || '[]');
-          existing.unshift({ ...payload, id: Date.now(), created_at: new Date().toISOString() });
-          localStorage.setItem(key, JSON.stringify(existing));
-        } catch (_) {}
-        reply(true, 'Registration submitted successfully.');
+        const msg = err?.message || String(err || '');
+        const isNetwork = err instanceof TypeError || /fetch|network|load failed/i.test(msg);
+        if (isNetwork) {
+          // Offline: keep the application on this device so nothing is lost,
+          // but never report success to the server.
+          try {
+            const key = 'cac_submissions';
+            const existing = JSON.parse(localStorage.getItem(key) || '[]');
+            existing.unshift({ ...payload, id: Date.now(), created_at: new Date().toISOString() });
+            localStorage.setItem(key, JSON.stringify(existing));
+            savedLocally = true;
+          } catch (_) {}
+          errorMsg = 'No internet connection. Your application was saved on this device only — please retry when you are back online.';
+        } else {
+          errorMsg = `Registration could not be saved: ${msg}. Please contact support.`;
+        }
       }
+      reply(!errorMsg, savedLocally ? errorMsg : errorMsg);
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
