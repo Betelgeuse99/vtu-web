@@ -60,6 +60,7 @@ export default function CacRegistrationScreen() {
   const [trustees, setTrustees] = useState([emptyTrustee(), emptyTrustee(), emptyTrustee()]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const set = (k, v) => setF(prev => ({ ...prev, [k]: v }));
   const states = Object.keys(STATES_LGAS).sort();
@@ -82,9 +83,7 @@ export default function CacRegistrationScreen() {
     return `NIGERIA, ${f[prefix+'State']||''}, ${f[prefix+'LGA']||''}, ${f[prefix+'City']||''}, ${f[prefix+'PostCode']||''}, ${f[prefix+'House']||''}, ${f[prefix+'Street']||''}`;
   };
 
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    const payload = {
+  const buildPayload = () => ({
       user_id: user?.id || 'anonymous',
       registration_type: regType,
       proposed_name: f.proposedName,
@@ -100,10 +99,29 @@ export default function CacRegistrationScreen() {
       directors, shareholders, pscs, trustees,
       shares: { authCapital:f.authCapital, issuedCapital:f.issuedCapital, capitalWords:f.capitalWords, shareClass:f.shareClass, sharesDivided:f.sharesDivided, nominalValue:f.nominalValue },
       guarantee: { amount:f.guaranteeAmount, purpose:f.guaranteePurpose },
-      secretary: { surname:f.secSurname, firstName:f.secFirstName, otherName:f.secOtherName, dob:f.secDOB, gender:f.secGender, occupation:f.secOccupation, phone:f.secPhone, email:f.secEmail, nin:f.secNIN, resAddress:f.secResAddress },
+      secretary: { surname:f.secSurname, firstName:f.secFirstName, otherName:f.secOtherName, dob:f.secDOB, gender:f.secGender, nationality:f.secNationality, occupation:f.secOccupation, phone:f.secPhone, email:f.secEmail, nin:f.secNIN, resAddress:f.secResAddress },
       compliance: { surname:f.compSurname, firstName:f.compFirstName, otherName:f.compOtherName, phone:f.compPhone, email:f.compEmail, address:f.compAddress },
       additional: { restrictionReason: f.restrictionReason },
-    };
+    });
+
+  const downloadPdfCopy = async () => {
+    setPdfBusy(true);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const { buildCacPdf, cacPdfFilename } = await import('../lib/cacPdf');
+      const input = { ...buildPayload(), id: 'DRAFT', created_at: new Date().toISOString() };
+      const doc = buildCacPdf(input, () => new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }));
+      doc.save(cacPdfFilename(input));
+    } catch (e) {
+      alert(`Could not generate the PDF — ${e.message || e}`);
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    const payload = buildPayload();
     try {
       const { supabaseInsert } = await import('../services/supabase');
       await supabaseInsert('cac_submissions', payload);
@@ -127,6 +145,7 @@ export default function CacRegistrationScreen() {
           </div>
           <h2 className="text-xl font-bold text-[#0A192F] dark:text-white mb-1">Submitted!</h2>
           <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">Your CAC registration for <span className="font-bold">{f.proposedName}</span> has been submitted. Our team will contact you at <span className="font-bold">{f.regEmail}</span>.</p>
+          <button onClick={downloadPdfCopy} disabled={pdfBusy} className="w-full py-4 mb-3 border-2 border-[#0A192F] dark:border-[#D4AF37] text-[#0A192F] dark:text-[#D4AF37] rounded-xl font-bold text-sm disabled:opacity-50">{pdfBusy ? 'Generating PDF…' : 'Download a copy of your application'}</button>
           <button onClick={() => navigate('/dashboard')} className="w-full py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Back to Dashboard</button>
         </div>
       </div>
@@ -167,6 +186,7 @@ export default function CacRegistrationScreen() {
           {isTrustees && <Section label={`Trustees (${trustees.length})`}>{trustees.map((t,i) => <Row key={i} k={`Trustee ${i+1}`} v={`${t.surname} ${t.firstName} | NIN: ${t.nin}`} />)}</Section>}
           {isCompany && <Section label="Secretary"><Row k="Name" v={`${f.secSurname} ${f.secFirstName} ${f.secOtherName}`} /><Row k="NIN" v={f.secNIN} /><Row k="Phone" v={f.secPhone} /></Section>}
           <Section label="Compliance"><Row k="Name" v={`${f.compSurname} ${f.compFirstName} ${f.compOtherName}`} /><Row k="Phone" v={f.compPhone} /><Row k="Email" v={f.compEmail} /><Row k="Address" v={f.compAddress} /></Section>
+          <button onClick={downloadPdfCopy} disabled={pdfBusy} className="w-full py-4 mb-3 border-2 border-gray-300 dark:border-slate-600 rounded-xl font-bold text-sm text-gray-600 dark:text-slate-300 disabled:opacity-50">{pdfBusy ? 'Generating PDF…' : 'Download PDF of this application'}</button>
           <div className="flex gap-3 pt-4">
             <button onClick={() => setStep('form')} className="flex-1 py-4 border-2 border-gray-300 dark:border-slate-600 rounded-xl font-bold text-sm text-gray-600 dark:text-slate-300">Edit</button>
             <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-4 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2">
