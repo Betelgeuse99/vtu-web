@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TopBar from '../components/TopBar';
 import StatusBadge from '../components/StatusBadge';
 import { fetchTransactions, fetchSuccessfulPayments, reconcileFunding } from '../services/supabase';
@@ -46,11 +46,15 @@ export default function TransactionsScreen() {
   const [txns, setTxns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
-  const [message, setMessage] = useState('');
+  const [fetchError, setFetchError] = useState(false);
+
+  const hasLoadedRef = useRef(false);
 
   const fetchTxns = useCallback(async () => {
     if (!user?.id) return;
-    setLoading(true);
+    // Only show the full-screen spinner on the very first load. Refreshing
+    // (manual pull) must never blank out the list the user is reading.
+    if (!hasLoadedRef.current) setLoading(true);
     try {
       // Self-heal missing funding rows first (same as the app)
       await reconcileFunding(user.id);
@@ -82,17 +86,20 @@ export default function TransactionsScreen() {
         return t2 - t1;
       });
       setTxns(merged);
-      setMessage(merged.length > 0 ? `Fetched ${merged.length} transactions` : '');
+      setFetchError(false);
     } catch (err) {
-      setMessage(`Fetch failed: ${err.message}`);
+      console.error('Failed to load transactions', err);
+      setFetchError(true);
     }
+    hasLoadedRef.current = true;
     setLoading(false);
   }, [user]);
 
   useEffect(() => {
     fetchTxns();
-    const iv = setInterval(fetchTxns, 15000);
-    return () => clearInterval(iv);
+    // No auto-reload/polling here. The list only refreshes when the user
+    // taps the refresh icon or re-opens the screen — no disappearing rows,
+    // no pointless network churn every few seconds.
   }, [fetchTxns]);
 
   return (
@@ -100,8 +107,8 @@ export default function TransactionsScreen() {
       <TopBar title="Transaction History" onBack />
       <div className="px-4 pt-2">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] text-gray-400">{message}</span>
-          <button onClick={fetchTxns} className="p-2 text-gray-400"><RefreshCw className="w-4 h-4" /></button>
+          <span className="text-[11px] text-red-400">{fetchError ? 'Could not load transactions. Tap refresh to retry.' : ''}</span>
+          <button onClick={fetchTxns} aria-label="Refresh transactions" className="p-2 text-gray-400"><RefreshCw className="w-4 h-4" /></button>
         </div>
         {loading ? (
           <div className="flex justify-center py-10"><div className="w-8 h-8 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" /></div>
