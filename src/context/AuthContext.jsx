@@ -5,6 +5,9 @@ import { getSession, setSession, getUser, setUser, getWallet, setWallet, clearAu
 
 const AuthContext = createContext(null);
 
+// 10-minute inactivity auto-logout (same as the Android app).
+const IDLE_TIMEOUT = 10 * 60 * 1000;
+
 export const AuthProvider = ({ children }) => {
   const [user, setUserState] = useState(() => getUser());
   const [wallet, setWalletState] = useState(() => getWallet() || { balance: 0 });
@@ -15,11 +18,18 @@ export const AuthProvider = ({ children }) => {
     if (!user?.id) return;
     try {
       const balance = await fetchWalletBalance(user.id);
-      if (balance !== null) {
-        const wb = { balance };
-        setWalletState(wb);
+      if (balance === null) return;
+      const next = Number(balance);
+      // Only touch state/storage when the value actually changed. Writing a
+      // fresh object every poll forced a full context re-render of every
+      // screen every 10 seconds (visible as flicker on the Transactions page,
+      // which does not even show the balance).
+      setWalletState((prev) => {
+        if (Number(prev?.balance) === next) return prev;
+        const wb = { balance: next };
         setWallet(wb, true);
-      }
+        return wb;
+      });
     } catch (err) {
       if (!silent) console.error('Failed to fetch balance', err);
     }
@@ -29,7 +39,11 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       fetchBalance(false);
       if (pollRef.current) clearInterval(pollRef.current);
-      pollRef.current = setInterval(() => fetchBalance(true), 10000);
+      pollRef.current = setInterval(() => {
+        // Skip network churn while the tab is hidden (mobile browsers suspend
+        // JS anyway; this avoids useless requests the moment a tab is visible).
+        if (document.visibilityState !== 'hidden') fetchBalance(true);
+      }, 10000);
     } else {
       if (pollRef.current) clearInterval(pollRef.current);
     }
@@ -68,23 +82,34 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 10-minute inactivity auto-logout (same as the Android app). Any pointer /
-  // key / scroll / touch activity resets the timer; on timeout the session is
-  // cleared and the router bounces to the welcome screen.
+  // key / scroll / touch activity marks the moment of last activity; a periodic
+  // check logs out once the gap passes 10 minutes. We deliberately DO NOT rely
+  // on a single reset-on-activity setTimeout: browsers throttle/pause timers in
+  // background or sleeping tabs, and the first tap on return used to re-arm a
+  // fresh 10-minute timer BEFORE the overdue timeout fired — so a tab left for
+  // days never logged out. Checking elapsed time on an interval plus on
+  // visibility/focus regain makes it fire reliably the moment you return.
   const logoutRef = useRef(logout);
   logoutRef.current = logout;
   useEffect(() => {
     if (!user?.id) return;
-    let timer = null;
-    const reset = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => logoutRef.current(), 10 * 60 * 1000);
-    };
+    let lastActivity = Date.now();
+    const bump = () => { lastActivity = Date.now(); };
     const events = ['pointerdown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
-    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
-    reset();
+    const check = () => {
+      if (Date.now() - lastActivity > IDLE_TIMEOUT) logoutRef.current();
+    };
+    events.forEach((e) => window.addEventListener(e, bump, { passive: true }));
+    const onVisible = () => { if (document.visibilityState === 'visible') check(); };
+    const onFocus = () => check();
+    const interval = setInterval(check, 30 * 1000);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onFocus);
     return () => {
-      if (timer) clearTimeout(timer);
-      events.forEach((e) => window.removeEventListener(e, reset));
+      events.forEach((e) => window.removeEventListener(e, bump));
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onFocus);
     };
   }, [user?.id]);
 
