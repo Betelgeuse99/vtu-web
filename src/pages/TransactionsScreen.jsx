@@ -16,6 +16,85 @@ const ICON_MAP = {
   recharge_pin: { icon: Receipt, bg: '#DCFCE7' },
 };
 
+// User-facing "Purchase Result" — ONLY the useful deliverable fields
+// (electricity token, cable bouquet, PINs, etc.). Raw/internal provider
+// response is reserved for the admin dashboard.
+const RESULT_LABELS = {
+  token: 'Token',
+  token_no: 'Token',
+  tokens: 'Token',
+  units: 'Units',
+  meter_no: 'Meter No.',
+  meternumber: 'Meter No.',
+  customer_name: 'Customer',
+  smartcard_no: 'Smartcard / IUC',
+  iuc: 'Smartcard / IUC',
+  iuc_number: 'Smartcard / IUC',
+  card_no: 'Smartcard / IUC',
+  bouquet: 'Bouquet',
+  current_bouquet: 'Bouquet',
+  plan_name: 'Plan',
+  product_name: 'Plan',
+  network: 'Network',
+  pin: 'PIN',
+  pins: 'PIN',
+  serial: 'Serial',
+};
+const RESULT_KEYS = new Set(Object.keys(RESULT_LABELS));
+
+function collectResultEntries(node, out, depth = 0) {
+  if (!node || depth > 4) return;
+  if (Array.isArray(node)) {
+    for (const item of node) collectResultEntries(item, out, depth + 1);
+    return;
+  }
+  if (typeof node !== 'object') return;
+  for (const [k, v] of Object.entries(node)) {
+    const key = String(k).toLowerCase().trim();
+    if (RESULT_KEYS.has(key)) {
+      if (Array.isArray(v)) {
+        for (const item of v) {
+          if (item !== null && (typeof item === 'object')) collectResultEntries(item, out, depth + 1);
+          else pushResultEntry(out, key, item);
+        }
+      } else if (v !== null && typeof v === 'object') {
+        collectResultEntries(v, out, depth + 1);
+      } else {
+        pushResultEntry(out, key, v);
+      }
+    } else if (v !== null && typeof v === 'object') {
+      collectResultEntries(v, out, depth + 1);
+    }
+  }
+}
+
+function pushResultEntry(out, key, value) {
+  if (value === null || value === undefined) return;
+  const label = RESULT_LABELS[key];
+  const text = String(value).trim();
+  if (!label || !text || text === 'null') return;
+  if (!out.some((e) => e.label === label && e.value === text)) out.push({ label, value: text });
+}
+
+function PurchaseResultCard({ data }) {
+  const entries = [];
+  collectResultEntries(data, entries);
+  if (entries.length === 0) return null;
+  return (
+    <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 mb-3">
+      <p className="font-bold text-gray-500 dark:text-slate-400 text-[14px] mb-2">Purchase Result</p>
+      <div className="space-y-2">
+        {entries.map((e, i) => (
+          <div key={i} className="flex justify-between gap-2">
+            <span className="text-gray-500 dark:text-slate-400 shrink-0 text-xs">{e.label}</span>
+            <span className="font-bold text-[#0A192F] dark:text-white text-right text-sm break-all">{e.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function TransactionsScreen() {
   const { user } = useAuth();
   const [txns, setTxns] = useState([]);
@@ -136,6 +215,7 @@ export default function TransactionsScreen() {
               {selected.reference && <div className="flex justify-between gap-2"><span className="text-gray-500 dark:text-slate-400 shrink-0">Reference</span><span className="font-medium text-xs text-right truncate">{selected.reference}</span></div>}
               <div className="flex justify-between gap-2"><span className="text-gray-500 dark:text-slate-400 shrink-0">Date</span><span className="font-medium text-right">{selected.created_at ? new Date(selected.created_at).toLocaleString() : ''}</span></div>
             </div>
+            <PurchaseResultCard data={selected.api_response} />
             <button onClick={() => setSelected(null)} className="w-full py-4 mt-1 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
           </div>
         </div>
