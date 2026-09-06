@@ -16,31 +16,6 @@ const ICON_MAP = {
   recharge_pin: { icon: Receipt, bg: '#DCFCE7' },
 };
 
-const FRIENDLY_LABELS = {
-  token: 'Token', units: 'Units', meter_no: 'Meter No.', customer_name: 'Customer Name',
-  customer_address: 'Address', tariff: 'Tariff', pin: 'PIN', pin_id: 'PIN ID',
-  smartcard_no: 'Smartcard No.', plan_name: 'Plan', codedAmount: 'Amount',
-  status: 'Status', message: 'Message', request_id: 'Request ID',
-  transaction_id: 'Transaction ID', response_code: 'Response Code',
-};
-
-function ApiResponseReceipt({ apiResponse }) {
-  if (!apiResponse || typeof apiResponse !== 'object') return null;
-  const entries = Object.entries(apiResponse).filter(([, v]) => v != null && v !== '' && v !== 'null');
-  if (entries.length === 0) return null;
-  return (
-    <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-4 mb-3">
-      <p className="font-bold text-gray-500 dark:text-slate-400 text-[14px] mb-2">Provider Response</p>
-      {entries.map(([key, value]) => (
-        <div key={key} className="flex justify-between gap-2 py-1">
-          <span className="text-gray-500 dark:text-slate-400 shrink-0 text-xs">{FRIENDLY_LABELS[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
-          <span className="font-medium text-right text-xs break-all">{String(value)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function TransactionsScreen() {
   const { user } = useAuth();
   const [txns, setTxns] = useState([]);
@@ -161,7 +136,6 @@ export default function TransactionsScreen() {
               {selected.reference && <div className="flex justify-between gap-2"><span className="text-gray-500 dark:text-slate-400 shrink-0">Reference</span><span className="font-medium text-xs text-right truncate">{selected.reference}</span></div>}
               <div className="flex justify-between gap-2"><span className="text-gray-500 dark:text-slate-400 shrink-0">Date</span><span className="font-medium text-right">{selected.created_at ? new Date(selected.created_at).toLocaleString() : ''}</span></div>
             </div>
-            <ApiResponseReceipt apiResponse={selected.api_response} />
             <button onClick={() => setSelected(null)} className="w-full py-4 mt-1 bg-[#0A192F] dark:bg-[#D4AF37] text-[#D4AF37] dark:text-[#0A192F] rounded-xl font-bold">Done</button>
           </div>
         </div>
